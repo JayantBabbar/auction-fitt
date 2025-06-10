@@ -77,39 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (name: string, email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    
-    try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            name: name
-          }
-        }
-      });
-
-      if (error) {
-        console.error('Sign up error:', error.message);
-        setIsLoading(false);
-        return false;
-      }
-
-      console.log('Sign up successful:', data.user?.email);
-      setIsLoading(false);
-      return true;
-    } catch (error) {
-      console.error('Sign up exception:', error);
-      setIsLoading(false);
-      return false;
-    }
-  };
-
   const logout = async () => {
     console.log('Logging out...');
     await supabase.auth.signOut();
@@ -118,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signUp, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
