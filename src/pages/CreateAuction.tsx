@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateAuction } from '@/hooks/useAuctions';
+import { ImageUpload } from '@/components/ImageUpload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,11 +24,11 @@ import {
 } from '@/components/ui/form';
 import { 
   ArrowLeft, 
-  Upload, 
   Calendar as CalendarIcon,
   Clock,
   DollarSign,
-  Loader2
+  Loader2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -48,6 +49,7 @@ const CreateAuction = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const createAuctionMutation = useCreateAuction();
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   
   const form = useForm<CreateAuctionForm>({
     defaultValues: {
@@ -57,7 +59,7 @@ const CreateAuction = () => {
       starting_bid: 0,
       reserve_price: 0,
       start_time: new Date(),
-      end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days from now
+      end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       condition: 'excellent',
     },
   });
@@ -72,12 +74,24 @@ const CreateAuction = () => {
       return;
     }
 
+    console.log('User creating auction:', user);
+    console.log('Form data:', data);
+
     // Calculate duration in days
     const durationMs = data.end_time.getTime() - data.start_time.getTime();
     const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
 
+    if (durationDays <= 0) {
+      toast({
+        title: "Invalid Duration",
+        description: "End time must be after start time.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      await createAuctionMutation.mutateAsync({
+      const auctionData = {
         created_by: user.id,
         title: data.title,
         description: data.description,
@@ -87,8 +101,13 @@ const CreateAuction = () => {
         condition: data.condition,
         start_time: data.start_time.toISOString(),
         auction_duration: durationDays,
-        status: 'draft',
-      });
+        status: 'draft' as const,
+        image_urls: imageUrls,
+      };
+
+      console.log('Submitting auction data:', auctionData);
+
+      await createAuctionMutation.mutateAsync(auctionData);
 
       toast({
         title: "Auction Created",
@@ -389,21 +408,22 @@ const CreateAuction = () => {
               {/* Image Upload */}
               <Card className="border-border/50 shadow-lg">
                 <CardHeader className="space-y-2">
-                  <CardTitle className="text-xl font-serif">Asset Images</CardTitle>
+                  <CardTitle className="text-xl font-serif flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <ImageIcon className="h-5 w-5 text-primary" />
+                    </div>
+                    Asset Images
+                  </CardTitle>
                   <CardDescription className="text-base">
-                    Upload high-quality images of the asset (coming soon)
+                    Upload high-quality images of the asset
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="border-2 border-dashed border-border/50 rounded-xl p-12 text-center bg-muted/20">
-                    <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-muted-foreground">Image upload coming soon</p>
-                      <p className="text-xs text-muted-foreground">
-                        File storage will be implemented in the next update
-                      </p>
-                    </div>
-                  </div>
+                  <ImageUpload
+                    onImagesChange={setImageUrls}
+                    maxImages={5}
+                    existingImages={imageUrls}
+                  />
                 </CardContent>
               </Card>
 

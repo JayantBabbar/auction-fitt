@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -255,6 +254,30 @@ const AdminDashboard = () => {
                           <CardDescription className="text-base text-slate-600">
                             {auction.description}
                           </CardDescription>
+                          
+                          {/* Display auction images */}
+                          {auction.image_urls && auction.image_urls.length > 0 && (
+                            <div className="mt-4">
+                              <div className="flex gap-2 overflow-x-auto pb-2">
+                                {auction.image_urls.slice(0, 4).map((url, index) => (
+                                  <div key={index} className="flex-shrink-0">
+                                    <img
+                                      src={url}
+                                      alt={`${auction.title} ${index + 1}`}
+                                      className="w-16 h-16 object-cover rounded-md border border-slate-200"
+                                    />
+                                  </div>
+                                ))}
+                                {auction.image_urls.length > 4 && (
+                                  <div className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-md border border-slate-200 flex items-center justify-center">
+                                    <span className="text-xs text-slate-600">
+                                      +{auction.image_urls.length - 4}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <Button variant="outline" size="sm" className="border-slate-200 hover:bg-slate-50">

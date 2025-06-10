@@ -27,17 +27,27 @@ export const useCreateAuction = () => {
   
   return useMutation({
     mutationFn: async (auction: AuctionInsert) => {
+      console.log('Creating auction with data:', auction);
+      
       const { data, error } = await supabase
         .from('auctions')
         .insert(auction)
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Auction creation error:', error);
+        throw error;
+      }
+      
+      console.log('Auction created successfully:', data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auctions'] });
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
     },
   });
 };
@@ -77,6 +87,40 @@ export const useDeleteAuction = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auctions'] });
+    },
+  });
+};
+
+export const useUploadAuctionImage = () => {
+  return useMutation({
+    mutationFn: async ({ file, auctionId }: { file: File; auctionId?: string }) => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `auction-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('auction-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('auction-images')
+        .getPublicUrl(filePath);
+
+      if (auctionId) {
+        const { error: dbError } = await supabase
+          .from('auction_images')
+          .insert({
+            auction_id: auctionId,
+            image_url: publicUrl,
+            is_primary: false
+          });
+
+        if (dbError) throw dbError;
+      }
+
+      return { url: publicUrl, path: filePath };
     },
   });
 };
