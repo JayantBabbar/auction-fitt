@@ -14,7 +14,9 @@ import {
   Timer,
   DollarSign,
   Trophy,
-  Eye
+  Eye,
+  Crown,
+  AlertCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,12 +24,15 @@ interface Auction {
   id: string;
   title: string;
   description: string;
-  currentBid: number;
+  starting_bid: number;
+  current_bid: number;
+  bid_increment: number;
   endTime: string;
   status: 'active' | 'upcoming' | 'ended';
   image: string;
   myBid?: number;
   isWatched?: boolean;
+  isLeading?: boolean;
 }
 
 const BidderDashboard = () => {
@@ -39,28 +44,37 @@ const BidderDashboard = () => {
       id: '1',
       title: 'Vintage Rolex Submariner',
       description: 'Classic 1960s timepiece in excellent condition',
-      currentBid: 12500,
+      starting_bid: 10000,
+      current_bid: 12500,
+      bid_increment: 100,
       endTime: '2024-01-15T18:00:00Z',
       status: 'active',
       image: '/placeholder.svg',
-      myBid: 12000,
-      isWatched: true
+      myBid: 12500,
+      isWatched: true,
+      isLeading: true
     },
     {
       id: '2',
       title: 'Original Picasso Sketch',
       description: 'Rare preliminary sketch from 1952',
-      currentBid: 45000,
+      starting_bid: 25000,
+      current_bid: 45000,
+      bid_increment: 1000,
       endTime: '2024-01-20T15:30:00Z',
       status: 'active',
       image: '/placeholder.svg',
-      isWatched: false
+      myBid: 44000,
+      isWatched: false,
+      isLeading: false
     },
     {
       id: '3',
       title: 'Antique Persian Rug',
       description: '18th century handwoven masterpiece',
-      currentBid: 8000,
+      starting_bid: 5000,
+      current_bid: 8000,
+      bid_increment: 200,
       endTime: '2024-01-25T12:00:00Z',
       status: 'upcoming',
       image: '/placeholder.svg',
@@ -70,30 +84,69 @@ const BidderDashboard = () => {
 
   const [bidAmounts, setBidAmounts] = useState<{[key: string]: string}>({});
 
+  const calculateMinNextBid = (auction: Auction) => {
+    return auction.current_bid + auction.bid_increment;
+  };
+
+  const validateBidAmount = (auction: Auction, bidAmount: number) => {
+    const minNextBid = calculateMinNextBid(auction);
+    
+    if (bidAmount < minNextBid) {
+      return {
+        isValid: false,
+        message: `Minimum bid is $${minNextBid.toLocaleString()} (current bid + $${auction.bid_increment} increment)`
+      };
+    }
+
+    // Check if bid is a valid increment
+    const bidDifference = bidAmount - auction.current_bid;
+    if (bidDifference % auction.bid_increment !== 0) {
+      return {
+        isValid: false,
+        message: `Bid must be in increments of $${auction.bid_increment}`
+      };
+    }
+
+    return { isValid: true, message: '' };
+  };
+
   const handleBid = (auctionId: string) => {
     const bidAmount = parseFloat(bidAmounts[auctionId] || '0');
     const auction = auctions.find(a => a.id === auctionId);
     
-    if (!auction || bidAmount <= auction.currentBid) {
+    if (!auction) return;
+
+    const validation = validateBidAmount(auction, bidAmount);
+    
+    if (!validation.isValid) {
       toast({
         title: "Invalid Bid",
-        description: "Your bid must be higher than the current bid",
+        description: validation.message,
         variant: "destructive"
       });
       return;
     }
 
-    setAuctions(prev => prev.map(a => 
-      a.id === auctionId 
-        ? { ...a, currentBid: bidAmount, myBid: bidAmount }
-        : a
-    ));
+    setAuctions(prev => prev.map(a => {
+      if (a.id === auctionId) {
+        return { 
+          ...a, 
+          current_bid: bidAmount, 
+          myBid: bidAmount,
+          isLeading: true
+        };
+      } else if (a.myBid && a.isLeading) {
+        // Remove leading status from other auctions
+        return { ...a, isLeading: false };
+      }
+      return a;
+    }));
 
     setBidAmounts(prev => ({ ...prev, [auctionId]: '' }));
 
     toast({
-      title: "Bid Placed!",
-      description: `Your bid of $${bidAmount.toLocaleString()} has been placed successfully.`,
+      title: "Bid Placed Successfully!",
+      description: `Your bid of $${bidAmount.toLocaleString()} has been placed. You are now leading!`,
     });
   };
 
@@ -123,6 +176,7 @@ const BidderDashboard = () => {
 
   const myBids = auctions.filter(a => a.myBid);
   const watchlist = auctions.filter(a => a.isWatched);
+  const leadingBids = auctions.filter(a => a.isLeading);
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,7 +203,7 @@ const BidderDashboard = () => {
 
       <div className="container mx-auto px-4 py-8">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -158,6 +212,18 @@ const BidderDashboard = () => {
                   <p className="text-3xl font-bold">{myBids.length}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Leading Bids</p>
+                  <p className="text-3xl font-bold text-green-600">{leadingBids.length}</p>
+                </div>
+                <Crown className="h-8 w-8 text-yellow-500" />
               </div>
             </CardContent>
           </Card>
@@ -207,27 +273,35 @@ const BidderDashboard = () => {
                           <Badge variant={auction.status === 'active' ? 'default' : 'secondary'}>
                             {auction.status}
                           </Badge>
-                          {auction.myBid && (
+                          {auction.isLeading && (
+                            <Badge className="bg-green-100 text-green-800 border-green-200">
+                              <Crown className="h-3 w-3 mr-1" />
+                              Leading
+                            </Badge>
+                          )}
+                          {auction.myBid && !auction.isLeading && (
                             <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                              My Bid
+                              My Bid: ${auction.myBid.toLocaleString()}
                             </Badge>
                           )}
                         </div>
                         <p className="text-muted-foreground mb-4">{auction.description}</p>
                         
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm mb-4">
+                          <div>
+                            <p className="text-muted-foreground">Starting Bid</p>
+                            <p className="font-semibold">${auction.starting_bid.toLocaleString()}</p>
+                          </div>
                           <div>
                             <p className="text-muted-foreground">Current Bid</p>
-                            <p className="text-2xl font-bold auction-gold">
-                              ${auction.currentBid.toLocaleString()}
+                            <p className="text-2xl font-bold text-primary">
+                              ${auction.current_bid.toLocaleString()}
                             </p>
                           </div>
-                          {auction.myBid && (
-                            <div>
-                              <p className="text-muted-foreground">My Last Bid</p>
-                              <p className="font-semibold">${auction.myBid.toLocaleString()}</p>
-                            </div>
-                          )}
+                          <div>
+                            <p className="text-muted-foreground">Bid Increment</p>
+                            <p className="font-semibold">${auction.bid_increment.toLocaleString()}</p>
+                          </div>
                           <div>
                             <p className="text-muted-foreground">Time Left</p>
                             <p className="font-semibold flex items-center gap-1">
@@ -235,6 +309,14 @@ const BidderDashboard = () => {
                               {getTimeRemaining(auction.endTime)}
                             </p>
                           </div>
+                          {auction.status === 'active' && (
+                            <div>
+                              <p className="text-muted-foreground">Min Next Bid</p>
+                              <p className="font-semibold text-green-600">
+                                ${calculateMinNextBid(auction).toLocaleString()}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                       
@@ -253,22 +335,40 @@ const BidderDashboard = () => {
                         <div className="flex-1 flex gap-2">
                           <Input
                             type="number"
-                            placeholder={`Min: $${(auction.currentBid + 100).toLocaleString()}`}
+                            placeholder={`Min: $${calculateMinNextBid(auction).toLocaleString()}`}
                             value={bidAmounts[auction.id] || ''}
                             onChange={(e) => setBidAmounts(prev => ({
                               ...prev,
                               [auction.id]: e.target.value
                             }))}
+                            step={auction.bid_increment}
+                            min={calculateMinNextBid(auction)}
                             className="max-w-xs"
                           />
                           <Button 
                             onClick={() => handleBid(auction.id)}
-                            className="bg-auction-gold hover:bg-auction-gold/90 text-auction-gold-foreground"
+                            className="bg-primary hover:bg-primary/90"
                           >
                             <DollarSign className="h-4 w-4 mr-1" />
                             Place Bid
                           </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => setBidAmounts(prev => ({
+                              ...prev,
+                              [auction.id]: calculateMinNextBid(auction).toString()
+                            }))}
+                          >
+                            Quick Bid: ${calculateMinNextBid(auction).toLocaleString()}
+                          </Button>
                         </div>
+                      </div>
+                    )}
+                    
+                    {auction.status === 'upcoming' && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>Auction hasn't started yet</span>
                       </div>
                     )}
                   </div>

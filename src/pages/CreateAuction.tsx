@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -38,6 +39,7 @@ interface CreateAuctionForm {
   category: string;
   starting_bid: number;
   reserve_price: number;
+  bid_increment: number;
   start_time: Date;
   end_time: Date;
   condition: 'excellent' | 'very_good' | 'good' | 'fair' | 'poor';
@@ -57,6 +59,7 @@ const CreateAuction = () => {
       category: '',
       starting_bid: 0,
       reserve_price: 0,
+      bid_increment: 50,
       start_time: new Date(),
       end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       condition: 'excellent',
@@ -107,6 +110,7 @@ const CreateAuction = () => {
         category: data.category,
         starting_bid: data.starting_bid,
         reserve_price: data.reserve_price || null,
+        bid_increment: data.bid_increment,
         condition: data.condition,
         start_time: data.start_time.toISOString(),
         auction_duration: durationDays,
@@ -295,7 +299,7 @@ const CreateAuction = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <FormField
                       control={form.control}
                       name="starting_bid"
@@ -350,6 +354,35 @@ const CreateAuction = () => {
                           </FormControl>
                           <FormDescription className="text-sm">
                             Minimum acceptable price (optional). Must be ≥ starting bid if set.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="bid_increment"
+                      rules={{ 
+                        required: "Bid increment is required",
+                        min: { value: 0.01, message: "Bid increment must be greater than 0" }
+                      }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold">Bid Increment ($)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="50"
+                              step="0.01"
+                              min="0.01"
+                              className="h-11 border-border/60 focus:border-primary transition-colors"
+                              {...field}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-sm">
+                            Minimum amount by which bids must increase
                           </FormDescription>
                           <FormMessage />
                         </FormItem>

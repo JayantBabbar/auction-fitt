@@ -44,6 +44,7 @@ export type Database = {
       auctions: {
         Row: {
           auction_duration: number
+          bid_increment: number
           bidder_count: number
           category: string
           condition: Database["public"]["Enums"]["auction_condition"]
@@ -66,6 +67,7 @@ export type Database = {
         }
         Insert: {
           auction_duration?: number
+          bid_increment?: number
           bidder_count?: number
           category: string
           condition: Database["public"]["Enums"]["auction_condition"]
@@ -88,6 +90,7 @@ export type Database = {
         }
         Update: {
           auction_duration?: number
+          bid_increment?: number
           bidder_count?: number
           category?: string
           condition?: Database["public"]["Enums"]["auction_condition"]
