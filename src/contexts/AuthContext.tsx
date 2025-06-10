@@ -4,21 +4,13 @@ import { User, AuthContextType } from '@/types/user';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo purposes
-const MOCK_USERS: User[] = [
-  {
-    id: '1',
-    email: 'admin@auction.com',
-    role: 'admin',
-    name: 'John Admin'
-  },
-  {
-    id: '2',
-    email: 'bidder@auction.com', 
-    role: 'bidder',
-    name: 'Jane Bidder'
-  }
-];
+// Mock admin user
+const ADMIN_USER: User = {
+  id: 'admin-1',
+  email: 'admin@auction.com',
+  role: 'admin',
+  name: 'System Administrator'
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -39,17 +31,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const foundUser = MOCK_USERS.find(u => u.email === email);
+    try {
+      // Check if admin login
+      if (email === ADMIN_USER.email && password === 'admin123') {
+        setUser(ADMIN_USER);
+        localStorage.setItem('auction-user', JSON.stringify(ADMIN_USER));
+        setIsLoading(false);
+        return true;
+      }
+      
+      // Check for bidder in localStorage
+      const bidders = JSON.parse(localStorage.getItem('auction-bidders') || '[]');
+      const foundBidder = bidders.find((b: User) => b.email === email);
+      
+      if (foundBidder && password === 'bidder123') {
+        setUser(foundBidder);
+        localStorage.setItem('auction-user', JSON.stringify(foundBidder));
+        setIsLoading(false);
+        return true;
+      }
+      
+      setIsLoading(false);
+      return false;
+    } catch (error) {
+      setIsLoading(false);
+      return false;
+    }
+  };
+
+  const signUp = async (name: string, email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
     
-    if (foundUser && password === 'password') {
-      setUser(foundUser);
-      localStorage.setItem('auction-user', JSON.stringify(foundUser));
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    try {
+      // Check if email already exists
+      const existingBidders = JSON.parse(localStorage.getItem('auction-bidders') || '[]');
+      const emailExists = existingBidders.some((b: User) => b.email === email) || email === ADMIN_USER.email;
+      
+      if (emailExists) {
+        setIsLoading(false);
+        return false;
+      }
+      
+      // Create new bidder
+      const newBidder: User = {
+        id: `bidder-${Date.now()}`,
+        email,
+        role: 'bidder',
+        name
+      };
+      
+      // Save to localStorage
+      const updatedBidders = [...existingBidders, newBidder];
+      localStorage.setItem('auction-bidders', JSON.stringify(updatedBidders));
+      
+      // Auto-login the new user
+      setUser(newBidder);
+      localStorage.setItem('auction-user', JSON.stringify(newBidder));
+      
       setIsLoading(false);
       return true;
+    } catch (error) {
+      setIsLoading(false);
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
   const logout = () => {
@@ -58,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signUp, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

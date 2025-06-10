@@ -20,8 +20,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-				serif: ['Playfair Display', 'serif'],
+				sans: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
+				serif: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

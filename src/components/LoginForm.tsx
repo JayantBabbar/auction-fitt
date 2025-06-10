@@ -5,16 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Gavel } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading } = useAuth();
+  const [name, setName] = useState('');
+  const { login, signUp, isLoading } = useAuth();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const success = await login(email, password);
@@ -22,10 +24,44 @@ const LoginForm = () => {
     if (!success) {
       toast({
         title: "Login Failed",
-        description: "Invalid email or password. Try admin@auction.com or bidder@auction.com with password 'password'",
+        description: "Invalid email or password. Please check your credentials and try again.",
         variant: "destructive"
       });
     }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name.trim()) {
+      toast({
+        title: "Sign Up Failed",
+        description: "Please enter your full name.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const success = await signUp(name.trim(), email, password);
+    
+    if (!success) {
+      toast({
+        title: "Sign Up Failed",
+        description: "Email already exists or there was an error. Please try again.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Welcome!",
+        description: "Your account has been created successfully.",
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setName('');
   };
 
   return (
@@ -37,7 +73,7 @@ const LoginForm = () => {
               <Gavel className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-4xl font-serif font-semibold text-foreground mb-2">
+          <h1 className="text-4xl font-semibold text-foreground mb-2">
             Auction House
           </h1>
           <p className="text-muted-foreground">
@@ -47,60 +83,126 @@ const LoginForm = () => {
 
         <Card className="shadow-lg border-0 bg-card/80 backdrop-blur">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-serif">Sign In</CardTitle>
+            <CardTitle className="text-2xl">Welcome</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              Sign in to your account or create a new one
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-11"
-                />
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full h-11 bg-primary hover:bg-primary/90" 
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </form>
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="login" onClick={resetForm}>Sign In</TabsTrigger>
+                <TabsTrigger value="signup" onClick={resetForm}>Sign Up</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Password</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full h-11 bg-primary hover:bg-primary/90" 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      'Sign In'
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="signup">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Your full name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="Create a password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full h-11 bg-primary hover:bg-primary/90" 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating account...
+                      </>
+                    ) : (
+                      'Create Account'
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
             
             <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">Demo Accounts:</p>
+              <p className="text-sm text-muted-foreground mb-2">Demo Admin Account:</p>
               <div className="space-y-1 text-xs">
-                <p><strong>Admin:</strong> admin@auction.com</p>
-                <p><strong>Bidder:</strong> bidder@auction.com</p>
-                <p><strong>Password:</strong> password</p>
+                <p><strong>Email:</strong> admin@auction.com</p>
+                <p><strong>Password:</strong> admin123</p>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Bidders can sign up with any email and use password: bidder123
+              </p>
             </div>
           </CardContent>
         </Card>
