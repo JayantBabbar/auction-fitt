@@ -94,33 +94,44 @@ export const useDeleteAuction = () => {
 export const useUploadAuctionImage = () => {
   return useMutation({
     mutationFn: async ({ file, auctionId }: { file: File; auctionId?: string }) => {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `auction-images/${fileName}`;
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `auction-images/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('auction-images')
-        .upload(filePath, file);
+        const { error: uploadError } = await supabase.storage
+          .from('auction-images')
+          .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw uploadError;
+        }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('auction-images')
-        .getPublicUrl(filePath);
+        const { data: { publicUrl } } = supabase.storage
+          .from('auction-images')
+          .getPublicUrl(filePath);
 
-      if (auctionId) {
-        const { error: dbError } = await supabase
-          .from('auction_images')
-          .insert({
-            auction_id: auctionId,
-            image_url: publicUrl,
-            is_primary: false
-          });
+        if (auctionId) {
+          const { error: dbError } = await supabase
+            .from('auction_images')
+            .insert({
+              auction_id: auctionId,
+              image_url: publicUrl,
+              is_primary: false
+            });
 
-        if (dbError) throw dbError;
+          if (dbError) {
+            console.error('Database error:', dbError);
+            throw dbError;
+          }
+        }
+
+        return { url: publicUrl, path: filePath };
+      } catch (error) {
+        console.error('Image upload failed:', error);
+        throw error;
       }
-
-      return { url: publicUrl, path: filePath };
     },
   });
 };
