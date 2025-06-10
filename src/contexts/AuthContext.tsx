@@ -1,59 +1,77 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { User, AuthContextType } from '@/types/user';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock admin user
-const ADMIN_USER: User = {
-  id: 'admin-1',
-  email: 'admin@auction.com',
-  role: 'admin',
-  name: 'System Administrator'
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user on app load
-    const storedUser = localStorage.getItem('auction-user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        setSession(session);
+        
+        if (session?.user) {
+          // Fetch user profile from profiles table
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile) {
+            setUser({
+              id: profile.id,
+              email: profile.email,
+              role: profile.role as 'admin' | 'bidder',
+              name: profile.name
+            });
+          }
+        } else {
+          setUser(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
+      if (!session) {
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
     try {
-      // Check if admin login
-      if (email === ADMIN_USER.email && password === 'admin123') {
-        setUser(ADMIN_USER);
-        localStorage.setItem('auction-user', JSON.stringify(ADMIN_USER));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        console.error('Login error:', error.message);
         setIsLoading(false);
-        return true;
+        return false;
       }
-      
-      // Check for bidder in localStorage
-      const bidders = JSON.parse(localStorage.getItem('auction-bidders') || '[]');
-      const foundBidder = bidders.find((b: User) => b.email === email);
-      
-      if (foundBidder && password === 'bidder123') {
-        setUser(foundBidder);
-        localStorage.setItem('auction-user', JSON.stringify(foundBidder));
-        setIsLoading(false);
-        return true;
-      }
-      
-      setIsLoading(false);
-      return false;
+
+      console.log('Login successful:', data.user?.email);
+      return true;
     } catch (error) {
+      console.error('Login exception:', error);
       setIsLoading(false);
       return false;
     }
@@ -62,46 +80,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (name: string, email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
     try {
-      // Check if email already exists
-      const existingBidders = JSON.parse(localStorage.getItem('auction-bidders') || '[]');
-      const emailExists = existingBidders.some((b: User) => b.email === email) || email === ADMIN_USER.email;
+      const redirectUrl = `${window.location.origin}/`;
       
-      if (emailExists) {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: name
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Sign up error:', error.message);
         setIsLoading(false);
         return false;
       }
-      
-      // Create new bidder
-      const newBidder: User = {
-        id: `bidder-${Date.now()}`,
-        email,
-        role: 'bidder',
-        name
-      };
-      
-      // Save to localStorage
-      const updatedBidders = [...existingBidders, newBidder];
-      localStorage.setItem('auction-bidders', JSON.stringify(updatedBidders));
-      
-      // Auto-login the new user
-      setUser(newBidder);
-      localStorage.setItem('auction-user', JSON.stringify(newBidder));
-      
+
+      console.log('Sign up successful:', data.user?.email);
       setIsLoading(false);
       return true;
     } catch (error) {
+      console.error('Sign up exception:', error);
       setIsLoading(false);
       return false;
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    console.log('Logging out...');
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('auction-user');
+    setSession(null);
   };
 
   return (

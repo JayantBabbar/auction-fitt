@@ -19,6 +19,15 @@ const LoginForm = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!email || !password) {
+      toast({
+        title: "Login Failed",
+        description: "Please enter both email and password.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const success = await login(email, password);
     
     if (!success) {
@@ -27,16 +36,30 @@ const LoginForm = () => {
         description: "Invalid email or password. Please check your credentials and try again.",
         variant: "destructive"
       });
+    } else {
+      toast({
+        title: "Welcome back!",
+        description: "You have been successfully logged in.",
+      });
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name.trim()) {
+    if (!name.trim() || !email || !password) {
       toast({
         title: "Sign Up Failed",
-        description: "Please enter your full name.",
+        description: "Please fill in all fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        title: "Sign Up Failed",
+        description: "Password must be at least 6 characters long.",
         variant: "destructive"
       });
       return;
@@ -52,8 +75,8 @@ const LoginForm = () => {
       });
     } else {
       toast({
-        title: "Welcome!",
-        description: "Your account has been created successfully.",
+        title: "Account Created!",
+        description: "Please check your email to verify your account.",
       });
     }
   };
@@ -169,10 +192,11 @@ const LoginForm = () => {
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="Create a password"
+                      placeholder="Create a password (min 6 characters)"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      minLength={6}
                       className="h-11"
                     />
                   </div>
@@ -201,7 +225,7 @@ const LoginForm = () => {
                 <p><strong>Password:</strong> admin123</p>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Bidders can sign up with any email and use password: bidder123
+                Create your own account above or use the demo admin credentials
               </p>
             </div>
           </CardContent>
