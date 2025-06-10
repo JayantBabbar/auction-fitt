@@ -9,6 +9,107 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      auction_images: {
+        Row: {
+          auction_id: string
+          created_at: string
+          id: string
+          image_url: string
+          is_primary: boolean | null
+        }
+        Insert: {
+          auction_id: string
+          created_at?: string
+          id?: string
+          image_url: string
+          is_primary?: boolean | null
+        }
+        Update: {
+          auction_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_primary?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auction_images_auction_id_fkey"
+            columns: ["auction_id"]
+            isOneToOne: false
+            referencedRelation: "auctions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auctions: {
+        Row: {
+          auction_duration: number
+          bidder_count: number
+          category: string
+          condition: Database["public"]["Enums"]["auction_condition"]
+          created_at: string
+          created_by: string
+          current_bid: number | null
+          description: string
+          dimensions: string | null
+          end_time: string | null
+          id: string
+          image_urls: string[] | null
+          provenance: string | null
+          reserve_price: number | null
+          start_time: string | null
+          starting_bid: number
+          status: Database["public"]["Enums"]["auction_status"]
+          title: string
+          updated_at: string
+          weight: string | null
+        }
+        Insert: {
+          auction_duration?: number
+          bidder_count?: number
+          category: string
+          condition: Database["public"]["Enums"]["auction_condition"]
+          created_at?: string
+          created_by: string
+          current_bid?: number | null
+          description: string
+          dimensions?: string | null
+          end_time?: string | null
+          id?: string
+          image_urls?: string[] | null
+          provenance?: string | null
+          reserve_price?: number | null
+          start_time?: string | null
+          starting_bid: number
+          status?: Database["public"]["Enums"]["auction_status"]
+          title: string
+          updated_at?: string
+          weight?: string | null
+        }
+        Update: {
+          auction_duration?: number
+          bidder_count?: number
+          category?: string
+          condition?: Database["public"]["Enums"]["auction_condition"]
+          created_at?: string
+          created_by?: string
+          current_bid?: number | null
+          description?: string
+          dimensions?: string | null
+          end_time?: string | null
+          id?: string
+          image_urls?: string[] | null
+          provenance?: string | null
+          reserve_price?: number | null
+          start_time?: string | null
+          starting_bid?: number
+          status?: Database["public"]["Enums"]["auction_status"]
+          title?: string
+          updated_at?: string
+          weight?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -41,12 +142,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_auction_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
     }
     Enums: {
+      auction_condition: "excellent" | "very_good" | "good" | "fair" | "poor"
+      auction_status: "draft" | "upcoming" | "active" | "ended" | "cancelled"
       user_role: "admin" | "bidder"
     }
     CompositeTypes: {
@@ -163,6 +270,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      auction_condition: ["excellent", "very_good", "good", "fair", "poor"],
+      auction_status: ["draft", "upcoming", "active", "ended", "cancelled"],
       user_role: ["admin", "bidder"],
     },
   },

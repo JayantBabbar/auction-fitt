@@ -2,11 +2,14 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCreateAuction } from '@/hooks/useAuctions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Form,
   FormControl,
@@ -22,48 +25,85 @@ import {
   Plus,
   X,
   Calendar,
-  DollarSign
+  DollarSign,
+  Loader2
 } from 'lucide-react';
 
 interface CreateAuctionForm {
-  assetName: string;
-  assetDescription: string;
+  title: string;
+  description: string;
   category: string;
-  startingBid: number;
-  reservePrice: number;
-  auctionDuration: number;
-  condition: string;
+  starting_bid: number;
+  reserve_price: number;
+  auction_duration: number;
+  condition: 'excellent' | 'very_good' | 'good' | 'fair' | 'poor';
   provenance: string;
   dimensions: string;
   weight: string;
-  images: FileList | null;
 }
 
 const CreateAuction = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const createAuctionMutation = useCreateAuction();
   
   const form = useForm<CreateAuctionForm>({
     defaultValues: {
-      assetName: '',
-      assetDescription: '',
+      title: '',
+      description: '',
       category: '',
-      startingBid: 0,
-      reservePrice: 0,
-      auctionDuration: 7,
-      condition: '',
+      starting_bid: 0,
+      reserve_price: 0,
+      auction_duration: 7,
+      condition: 'excellent',
       provenance: '',
       dimensions: '',
       weight: '',
-      images: null,
     },
   });
 
-  const onSubmit = (data: CreateAuctionForm) => {
-    console.log('Creating auction:', data);
-    console.log('Uploaded images:', uploadedImages);
-    // TODO: Submit to backend
-    navigate('/');
+  const onSubmit = async (data: CreateAuctionForm) => {
+    if (!user?.id) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create an auction.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await createAuctionMutation.mutateAsync({
+        created_by: user.id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        starting_bid: data.starting_bid,
+        reserve_price: data.reserve_price || null,
+        condition: data.condition,
+        provenance: data.provenance || null,
+        dimensions: data.dimensions || null,
+        weight: data.weight || null,
+        auction_duration: data.auction_duration,
+        status: 'draft',
+      });
+
+      toast({
+        title: "Auction Created",
+        description: `"${data.title}" has been successfully created as a draft.`,
+      });
+
+      navigate('/');
+    } catch (error) {
+      console.error('Error creating auction:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create auction. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,7 +161,8 @@ const CreateAuction = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
-                      name="assetName"
+                      name="title"
+                      rules={{ required: "Asset name is required" }}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium">Asset Name</FormLabel>
@@ -140,6 +181,7 @@ const CreateAuction = () => {
                     <FormField
                       control={form.control}
                       name="category"
+                      rules={{ required: "Category is required" }}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium">Category</FormLabel>
@@ -158,7 +200,8 @@ const CreateAuction = () => {
 
                   <FormField
                     control={form.control}
-                    name="assetDescription"
+                    name="description"
+                    rules={{ required: "Description is required" }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-medium">Description</FormLabel>
@@ -172,6 +215,31 @@ const CreateAuction = () => {
                         <FormDescription>
                           Include condition, history, and any notable features
                         </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="condition"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium">Condition</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="border-border/50 focus:border-primary">
+                              <SelectValue placeholder="Select condition" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="excellent">Excellent</SelectItem>
+                            <SelectItem value="very_good">Very Good</SelectItem>
+                            <SelectItem value="good">Good</SelectItem>
+                            <SelectItem value="fair">Fair</SelectItem>
+                            <SelectItem value="poor">Poor</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -194,7 +262,11 @@ const CreateAuction = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <FormField
                       control={form.control}
-                      name="startingBid"
+                      name="starting_bid"
+                      rules={{ 
+                        required: "Starting bid is required",
+                        min: { value: 0, message: "Starting bid must be positive" }
+                      }}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium">Starting Bid ($)</FormLabel>
@@ -214,7 +286,7 @@ const CreateAuction = () => {
                     
                     <FormField
                       control={form.control}
-                      name="reservePrice"
+                      name="reserve_price"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium">Reserve Price ($)</FormLabel>
@@ -235,7 +307,11 @@ const CreateAuction = () => {
                     
                     <FormField
                       control={form.control}
-                      name="auctionDuration"
+                      name="auction_duration"
+                      rules={{ 
+                        required: "Duration is required",
+                        min: { value: 1, message: "Duration must be at least 1 day" }
+                      }}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium">Duration (days)</FormLabel>
@@ -266,24 +342,6 @@ const CreateAuction = () => {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="condition"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Condition</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="e.g., Excellent, Good, Fair" 
-                              className="border-border/50 focus:border-primary"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
                     <FormField
                       control={form.control}
                       name="provenance"
@@ -346,52 +404,19 @@ const CreateAuction = () => {
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-serif">Asset Images</CardTitle>
                   <CardDescription>
-                    Upload high-quality images of the asset (recommended: multiple angles)
+                    Upload high-quality images of the asset (coming soon)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="border-2 border-dashed border-border/50 rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
+                  <div className="border-2 border-dashed border-border/50 rounded-lg p-8 text-center opacity-50">
                     <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <div className="space-y-2">
-                      <Label htmlFor="image-upload" className="text-sm font-medium cursor-pointer">
-                        Click to upload images
-                      </Label>
+                      <p className="text-sm font-medium text-muted-foreground">Image upload coming soon</p>
                       <p className="text-xs text-muted-foreground">
-                        Support for JPG, PNG files up to 10MB each
+                        File storage will be implemented in the next update
                       </p>
                     </div>
-                    <Input
-                      id="image-upload"
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageUpload}
-                    />
                   </div>
-                  
-                  {uploadedImages.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {uploadedImages.map((file, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`Upload ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg border border-border/50"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => removeImage(index)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
 
@@ -402,14 +427,23 @@ const CreateAuction = () => {
                   variant="outline" 
                   onClick={() => navigate('/')}
                   className="px-6"
+                  disabled={createAuctionMutation.isPending}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
                   className="px-6 bg-primary hover:bg-primary/90"
+                  disabled={createAuctionMutation.isPending}
                 >
-                  Create Auction
+                  {createAuctionMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create Auction'
+                  )}
                 </Button>
               </div>
             </form>
