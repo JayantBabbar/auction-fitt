@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -74,6 +73,16 @@ const CreateAuction = () => {
       return;
     }
 
+    // Client-side validation for reserve price
+    if (data.reserve_price > 0 && data.reserve_price < data.starting_bid) {
+      toast({
+        title: "Validation Error",
+        description: "Reserve price must be greater than or equal to the starting bid.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     console.log('User creating auction:', user);
     console.log('Form data:', data);
 
@@ -115,11 +124,27 @@ const CreateAuction = () => {
       });
 
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating auction:', error);
+      
+      // Handle specific database errors
+      let errorMessage = "Failed to create auction. Please try again.";
+      
+      if (error?.message?.includes('auctions_check')) {
+        errorMessage = "Reserve price must be greater than or equal to starting bid.";
+      } else if (error?.message?.includes('starting_bid')) {
+        errorMessage = "Starting bid must be a positive number.";
+      } else if (error?.message?.includes('title')) {
+        errorMessage = "Asset name is required.";
+      } else if (error?.message?.includes('description')) {
+        errorMessage = "Description is required.";
+      } else if (error?.code === '23505') {
+        errorMessage = "An auction with this title already exists.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to create auction. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -276,7 +301,7 @@ const CreateAuction = () => {
                       name="starting_bid"
                       rules={{ 
                         required: "Starting bid is required",
-                        min: { value: 0, message: "Starting bid must be positive" }
+                        min: { value: 0.01, message: "Starting bid must be greater than 0" }
                       }}
                       render={({ field }) => (
                         <FormItem>
@@ -285,6 +310,8 @@ const CreateAuction = () => {
                             <Input 
                               type="number" 
                               placeholder="0"
+                              step="0.01"
+                              min="0.01"
                               className="h-11 border-border/60 focus:border-primary transition-colors"
                               {...field}
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -298,6 +325,15 @@ const CreateAuction = () => {
                     <FormField
                       control={form.control}
                       name="reserve_price"
+                      rules={{
+                        validate: (value) => {
+                          const startingBid = form.getValues('starting_bid');
+                          if (value > 0 && value < startingBid) {
+                            return "Reserve price must be greater than or equal to starting bid";
+                          }
+                          return true;
+                        }
+                      }}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-semibold">Reserve Price ($)</FormLabel>
@@ -305,12 +341,16 @@ const CreateAuction = () => {
                             <Input 
                               type="number" 
                               placeholder="0"
+                              step="0.01"
+                              min="0"
                               className="h-11 border-border/60 focus:border-primary transition-colors"
                               {...field}
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                             />
                           </FormControl>
-                          <FormDescription className="text-sm">Minimum acceptable price (optional)</FormDescription>
+                          <FormDescription className="text-sm">
+                            Minimum acceptable price (optional). Must be ≥ starting bid if set.
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
