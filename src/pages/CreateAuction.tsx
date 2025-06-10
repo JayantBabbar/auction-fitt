@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Form,
@@ -22,12 +24,13 @@ import {
 import { 
   ArrowLeft, 
   Upload, 
-  Plus,
-  X,
-  Calendar,
+  Calendar as CalendarIcon,
+  Clock,
   DollarSign,
   Loader2
 } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface CreateAuctionForm {
   title: string;
@@ -35,18 +38,15 @@ interface CreateAuctionForm {
   category: string;
   starting_bid: number;
   reserve_price: number;
-  auction_duration: number;
+  start_time: Date;
+  end_time: Date;
   condition: 'excellent' | 'very_good' | 'good' | 'fair' | 'poor';
-  provenance: string;
-  dimensions: string;
-  weight: string;
 }
 
 const CreateAuction = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const createAuctionMutation = useCreateAuction();
   
   const form = useForm<CreateAuctionForm>({
@@ -56,11 +56,9 @@ const CreateAuction = () => {
       category: '',
       starting_bid: 0,
       reserve_price: 0,
-      auction_duration: 7,
+      start_time: new Date(),
+      end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days from now
       condition: 'excellent',
-      provenance: '',
-      dimensions: '',
-      weight: '',
     },
   });
 
@@ -74,6 +72,10 @@ const CreateAuction = () => {
       return;
     }
 
+    // Calculate duration in days
+    const durationMs = data.end_time.getTime() - data.start_time.getTime();
+    const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+
     try {
       await createAuctionMutation.mutateAsync({
         created_by: user.id,
@@ -83,10 +85,8 @@ const CreateAuction = () => {
         starting_bid: data.starting_bid,
         reserve_price: data.reserve_price || null,
         condition: data.condition,
-        provenance: data.provenance || null,
-        dimensions: data.dimensions || null,
-        weight: data.weight || null,
-        auction_duration: data.auction_duration,
+        start_time: data.start_time.toISOString(),
+        auction_duration: durationDays,
         status: 'draft',
       });
 
@@ -106,54 +106,44 @@ const CreateAuction = () => {
     }
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      const newImages = Array.from(files);
-      setUploadedImages(prev => [...prev, ...newImages]);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setUploadedImages(prev => prev.filter((_, i) => i !== index));
-  };
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b bg-card/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate('/')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:bg-muted/50"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </Button>
             <div className="h-6 w-px bg-border" />
             <div>
-              <h1 className="text-2xl font-serif font-semibold text-foreground">Create New Auction</h1>
+              <h1 className="text-2xl font-serif font-bold text-foreground">Create New Auction</h1>
               <p className="text-sm text-muted-foreground">Add a new asset to the auction platform</p>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-6 py-8">
         <div className="max-w-4xl mx-auto">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              {/* Basic Information */}
-              <Card className="shadow-sm border-border/50">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl font-serif flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-primary" />
+              {/* Asset Information */}
+              <Card className="border-border/50 shadow-lg">
+                <CardHeader className="space-y-2">
+                  <CardTitle className="text-xl font-serif flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <DollarSign className="h-5 w-5 text-primary" />
+                    </div>
                     Asset Information
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-base">
                     Provide essential details about the asset being auctioned
                   </CardDescription>
                 </CardHeader>
@@ -165,11 +155,11 @@ const CreateAuction = () => {
                       rules={{ required: "Asset name is required" }}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium">Asset Name</FormLabel>
+                          <FormLabel className="text-sm font-semibold">Asset Name</FormLabel>
                           <FormControl>
                             <Input 
                               placeholder="Enter asset name" 
-                              className="border-border/50 focus:border-primary"
+                              className="h-11 border-border/60 focus:border-primary transition-colors"
                               {...field} 
                             />
                           </FormControl>
@@ -184,11 +174,11 @@ const CreateAuction = () => {
                       rules={{ required: "Category is required" }}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium">Category</FormLabel>
+                          <FormLabel className="text-sm font-semibold">Category</FormLabel>
                           <FormControl>
                             <Input 
                               placeholder="e.g., Art, Jewelry, Collectibles" 
-                              className="border-border/50 focus:border-primary"
+                              className="h-11 border-border/60 focus:border-primary transition-colors"
                               {...field} 
                             />
                           </FormControl>
@@ -204,15 +194,15 @@ const CreateAuction = () => {
                     rules={{ required: "Description is required" }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">Description</FormLabel>
+                        <FormLabel className="text-sm font-semibold">Description</FormLabel>
                         <FormControl>
                           <Textarea 
                             placeholder="Provide a detailed description of the asset..."
-                            className="min-h-[120px] border-border/50 focus:border-primary resize-none"
+                            className="min-h-[140px] border-border/60 focus:border-primary resize-none transition-colors"
                             {...field} 
                           />
                         </FormControl>
-                        <FormDescription>
+                        <FormDescription className="text-sm">
                           Include condition, history, and any notable features
                         </FormDescription>
                         <FormMessage />
@@ -225,10 +215,10 @@ const CreateAuction = () => {
                     name="condition"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">Condition</FormLabel>
+                        <FormLabel className="text-sm font-semibold">Condition</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-border/50 focus:border-primary">
+                            <SelectTrigger className="h-11 border-border/60 focus:border-primary">
                               <SelectValue placeholder="Select condition" />
                             </SelectTrigger>
                           </FormControl>
@@ -247,19 +237,21 @@ const CreateAuction = () => {
                 </CardContent>
               </Card>
 
-              {/* Financial Details */}
-              <Card className="shadow-sm border-border/50">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl font-serif flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
+              {/* Auction Parameters */}
+              <Card className="border-border/50 shadow-lg">
+                <CardHeader className="space-y-2">
+                  <CardTitle className="text-xl font-serif flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Clock className="h-5 w-5 text-primary" />
+                    </div>
                     Auction Parameters
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-base">
                     Set pricing and timing for the auction
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
                       name="starting_bid"
@@ -269,12 +261,12 @@ const CreateAuction = () => {
                       }}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium">Starting Bid ($)</FormLabel>
+                          <FormLabel className="text-sm font-semibold">Starting Bid ($)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number" 
                               placeholder="0"
-                              className="border-border/50 focus:border-primary"
+                              className="h-11 border-border/60 focus:border-primary transition-colors"
                               {...field}
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                             />
@@ -289,108 +281,103 @@ const CreateAuction = () => {
                       name="reserve_price"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium">Reserve Price ($)</FormLabel>
+                          <FormLabel className="text-sm font-semibold">Reserve Price ($)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number" 
                               placeholder="0"
-                              className="border-border/50 focus:border-primary"
+                              className="h-11 border-border/60 focus:border-primary transition-colors"
                               {...field}
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                             />
                           </FormControl>
-                          <FormDescription>Minimum acceptable price</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="auction_duration"
-                      rules={{ 
-                        required: "Duration is required",
-                        min: { value: 1, message: "Duration must be at least 1 day" }
-                      }}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Duration (days)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="7"
-                              className="border-border/50 focus:border-primary"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 7)}
-                            />
-                          </FormControl>
+                          <FormDescription className="text-sm">Minimum acceptable price (optional)</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                </CardContent>
-              </Card>
 
-              {/* Asset Details */}
-              <Card className="shadow-sm border-border/50">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl font-serif">Additional Details</CardTitle>
-                  <CardDescription>
-                    Provide technical specifications and provenance information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
-                      name="provenance"
+                      name="start_time"
+                      rules={{ required: "Start time is required" }}
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Provenance</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Origin and ownership history" 
-                              className="border-border/50 focus:border-primary"
-                              {...field} 
-                            />
-                          </FormControl>
+                        <FormItem className="flex flex-col">
+                          <FormLabel className="text-sm font-semibold">Auction Start Date & Time</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "h-11 pl-3 text-left font-normal border-border/60 hover:border-primary transition-colors",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP 'at' p")
+                                  ) : (
+                                    <span>Pick start date & time</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => date < new Date()}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
-                      name="dimensions"
+                      name="end_time"
+                      rules={{ required: "End time is required" }}
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Dimensions</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="L x W x H (inches/cm)" 
-                              className="border-border/50 focus:border-primary"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="weight"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Weight</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Weight with unit" 
-                              className="border-border/50 focus:border-primary"
-                              {...field} 
-                            />
-                          </FormControl>
+                        <FormItem className="flex flex-col">
+                          <FormLabel className="text-sm font-semibold">Auction End Date & Time</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "h-11 pl-3 text-left font-normal border-border/60 hover:border-primary transition-colors",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP 'at' p")
+                                  ) : (
+                                    <span>Pick end date & time</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => date < form.watch('start_time') || date < new Date()}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -400,15 +387,15 @@ const CreateAuction = () => {
               </Card>
 
               {/* Image Upload */}
-              <Card className="shadow-sm border-border/50">
-                <CardHeader className="pb-4">
+              <Card className="border-border/50 shadow-lg">
+                <CardHeader className="space-y-2">
                   <CardTitle className="text-xl font-serif">Asset Images</CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-base">
                     Upload high-quality images of the asset (coming soon)
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="border-2 border-dashed border-border/50 rounded-lg p-8 text-center opacity-50">
+                <CardContent>
+                  <div className="border-2 border-dashed border-border/50 rounded-xl p-12 text-center bg-muted/20">
                     <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-muted-foreground">Image upload coming soon</p>
@@ -421,19 +408,19 @@ const CreateAuction = () => {
               </Card>
 
               {/* Submit Actions */}
-              <div className="flex justify-end gap-4 pt-6 border-t border-border/50">
+              <div className="flex justify-end gap-4 pt-8">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => navigate('/')}
-                  className="px-6"
+                  className="px-8 h-11"
                   disabled={createAuctionMutation.isPending}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
-                  className="px-6 bg-primary hover:bg-primary/90"
+                  className="px-8 h-11 bg-primary hover:bg-primary/90 shadow-lg"
                   disabled={createAuctionMutation.isPending}
                 >
                   {createAuctionMutation.isPending ? (
