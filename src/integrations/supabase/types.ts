@@ -9,128 +9,16 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      auction_items: {
-        Row: {
-          bid_increment: number
-          created_at: string | null
-          created_by: string
-          current_bid: number
-          description: string | null
-          end_time: string
-          id: string
-          image_url: string | null
-          is_active: boolean | null
-          starting_bid: number
-          title: string
-          top_bidder_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          bid_increment?: number
-          created_at?: string | null
-          created_by: string
-          current_bid?: number
-          description?: string | null
-          end_time: string
-          id?: string
-          image_url?: string | null
-          is_active?: boolean | null
-          starting_bid?: number
-          title: string
-          top_bidder_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          bid_increment?: number
-          created_at?: string | null
-          created_by?: string
-          current_bid?: number
-          description?: string | null
-          end_time?: string
-          id?: string
-          image_url?: string | null
-          is_active?: boolean | null
-          starting_bid?: number
-          title?: string
-          top_bidder_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      bids: {
-        Row: {
-          amount: number
-          bidder_id: string
-          created_at: string | null
-          id: string
-          item_id: string
-        }
-        Insert: {
-          amount: number
-          bidder_id: string
-          created_at?: string | null
-          id?: string
-          item_id: string
-        }
-        Update: {
-          amount?: number
-          bidder_id?: string
-          created_at?: string | null
-          id?: string
-          item_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bids_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "auction_items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          email: string
-          id: string
-          is_first_login: boolean | null
-          name: string
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          id: string
-          is_first_login?: boolean | null
-          name: string
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-          is_first_login?: boolean | null
-          name?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: Database["public"]["Enums"]["user_role"]
-      }
+      [_ in never]: never
     }
     Enums: {
-      user_role: "admin" | "bidder"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -245,8 +133,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      user_role: ["admin", "bidder"],
-    },
+    Enums: {},
   },
 } as const
