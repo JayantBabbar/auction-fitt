@@ -3,6 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// Type definition for the place_bid function response
+interface PlaceBidResponse {
+  success: boolean;
+  bid_id?: string;
+  message?: string;
+  error?: string;
+}
+
 export const useBids = (auctionId?: string) => {
   return useQuery({
     queryKey: ['bids', auctionId],
@@ -92,7 +100,7 @@ export const usePlaceBid = () => {
       });
       
       if (error) throw error;
-      return data;
+      return data as PlaceBidResponse;
     },
     onSuccess: (data, variables) => {
       if (data.success) {
