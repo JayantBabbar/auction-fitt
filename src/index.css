@@ -3,95 +3,109 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 215 25% 15%;
+    --background: 248 250 252;
+    --foreground: 15 23 42;
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
 
-    --primary: 215 25% 15%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 30 58 138;
+    --primary-foreground: 248 250 252;
 
-    --secondary: 210 40% 98%;
-    --secondary-foreground: 215 25% 15%;
+    --secondary: 241 245 249;
+    --secondary-foreground: 51 65 85;
 
-    --muted: 210 40% 98%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 248 250 252;
+    --muted-foreground: 100 116 139;
 
-    --accent: 210 40% 98%;
-    --accent-foreground: 215 25% 15%;
+    --accent: 241 245 249;
+    --accent-foreground: 51 65 85;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 239 68 68;
+    --destructive-foreground: 248 250 252;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 215 25% 15%;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 30 58 138;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    --auction-gold: 45 93% 58%;
-    --auction-gold-foreground: 45 86% 15%;
+    --auction-gold: 251 191 36;
+    --auction-gold-foreground: 15 23 42;
     
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 255 255 255;
+    --sidebar-foreground: 51 65 85;
+    --sidebar-primary: 30 58 138;
+    --sidebar-primary-foreground: 248 250 252;
+    --sidebar-accent: 241 245 249;
+    --sidebar-accent-foreground: 51 65 85;
+    --sidebar-border: 226 232 240;
+    --sidebar-ring: 30 58 138;
+
+    --fintech-blue: 30 58 138;
+    --fintech-blue-light: 37 99 235;
+    --fintech-gray: 71 85 105;
+    --fintech-gray-light: 148 163 184;
+    --fintech-green: 34 197 94;
+    --fintech-red: 239 68 68;
   }
 
   .dark {
-    --background: 215 28% 6%;
-    --foreground: 210 40% 98%;
+    --background: 2 6 23;
+    --foreground: 248 250 252;
 
-    --card: 215 28% 6%;
-    --card-foreground: 210 40% 98%;
+    --card: 15 23 42;
+    --card-foreground: 248 250 252;
 
-    --popover: 215 28% 6%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 15 23 42;
+    --popover-foreground: 248 250 252;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 215 28% 6%;
+    --primary: 59 130 246;
+    --primary-foreground: 15 23 42;
 
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 30 41 59;
+    --secondary-foreground: 226 232 240;
 
-    --muted: 215 28% 17%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 30 41 59;
+    --muted-foreground: 148 163 184;
 
-    --accent: 215 28% 17%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 30 41 59;
+    --accent-foreground: 226 232 240;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 239 68 68;
+    --destructive-foreground: 248 250 252;
 
-    --border: 215 28% 17%;
-    --input: 215 28% 17%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 51 65 85;
+    --input: 51 65 85;
+    --ring: 59 130 246;
     
-    --auction-gold: 45 93% 58%;
-    --auction-gold-foreground: 45 86% 15%;
+    --auction-gold: 251 191 36;
+    --auction-gold-foreground: 15 23 42;
     
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 15 23 42;
+    --sidebar-foreground: 226 232 240;
+    --sidebar-primary: 59 130 246;
+    --sidebar-primary-foreground: 15 23 42;
+    --sidebar-accent: 30 41 59;
+    --sidebar-accent-foreground: 226 232 240;
+    --sidebar-border: 51 65 85;
+    --sidebar-ring: 59 130 246;
+
+    --fintech-blue: 59 130 246;
+    --fintech-blue-light: 96 165 250;
+    --fintech-gray: 148 163 184;
+    --fintech-gray-light: 203 213 225;
+    --fintech-green: 34 197 94;
+    --fintech-red: 239 68 68;
   }
 }
 
@@ -102,24 +116,29 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    letter-spacing: -0.011em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-weight: 600;
     letter-spacing: -0.025em;
   }
 }
 
 @layer components {
-  .auction-card {
-    @apply bg-card/70 backdrop-blur-sm border border-border/60 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200;
+  .fintech-card {
+    @apply bg-card border border-border rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 backdrop-blur-sm;
   }
   
-  .bid-button {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md;
+  .fintech-button {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md border border-primary/20;
+  }
+  
+  .fintech-button-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md border border-border;
   }
   
   .auction-gold {
@@ -131,15 +150,31 @@
     color: hsl(var(--auction-gold-foreground));
   }
 
-  .corporate-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%);
+  .fintech-gradient {
+    background: linear-gradient(135deg, hsl(var(--fintech-blue)) 0%, hsl(var(--fintech-blue-light)) 100%);
   }
 
   .fintech-shadow {
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.05);
   }
 
   .fintech-shadow-lg {
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  }
+
+  .fintech-border {
+    @apply border border-border/60;
+  }
+
+  .fintech-text-primary {
+    color: hsl(var(--fintech-blue));
+  }
+
+  .fintech-text-secondary {
+    color: hsl(var(--fintech-gray));
+  }
+
+  .fintech-bg-subtle {
+    background-color: hsl(var(--background));
   }
 }

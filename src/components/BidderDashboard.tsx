@@ -135,8 +135,8 @@ const BidderDashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading auctions...</p>
+          <div className="w-8 h-8 border-4 border-fintech-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-fintech-gray font-medium">Loading auction data...</p>
         </div>
       </div>
     );
@@ -146,12 +146,15 @@ const BidderDashboard = () => {
     <div className="min-h-screen bg-background">
       <BidderHeader userName={user?.name} onLogout={logout} />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-6 py-8">
         {!canBid && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-yellow-800 font-medium">
-              🏆 Bidding Restricted: You cannot bid for 24 hours after winning an auction.
-            </p>
+          <div className="mb-8 p-5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-xl fintech-shadow">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+              <p className="text-amber-800 font-medium">
+                🏆 Bidding Restricted: You cannot bid for 24 hours after winning an auction.
+              </p>
+            </div>
           </div>
         )}
 
@@ -162,15 +165,27 @@ const BidderDashboard = () => {
           wonAuctions={3}
         />
 
-        <div className="space-y-6">
-          <h2 className="text-2xl font-serif font-semibold">Active Auctions</h2>
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-foreground tracking-tight">Active Auctions</h2>
+              <p className="text-fintech-gray mt-1 font-medium">Live bidding opportunities</p>
+            </div>
+            <div className="text-sm text-fintech-gray bg-muted/50 px-4 py-2 rounded-lg border border-border/50">
+              {activeAuctions.length} active auctions
+            </div>
+          </div>
           
           {activeAuctions.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg">No active auctions available at the moment.</p>
+            <div className="text-center py-16">
+              <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-8 h-8 bg-fintech-gray/20 rounded-lg"></div>
+              </div>
+              <p className="text-fintech-gray text-lg font-medium">No active auctions available</p>
+              <p className="text-fintech-gray-light text-sm mt-1">Check back later for new opportunities</p>
             </div>
           ) : (
-            <div className="grid gap-6">
+            <div className="grid gap-8">
               {activeAuctions.map((auction) => {
                 const userBid = getUserBidForAuction(auction.id);
                 const isLeading = userBid && auction.current_bid === userBid.amount;

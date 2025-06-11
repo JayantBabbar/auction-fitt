@@ -91,72 +91,70 @@ const AuctionCard = ({
   const minNextBid = calculateMinNextBid();
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      <div className="md:flex">
-        <div className="md:w-48 h-48 bg-muted flex items-center justify-center overflow-hidden">
-          {auction.image_urls && auction.image_urls.length > 0 ? (
-            <img 
-              src={getDisplayImage()} 
-              alt={auction.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <img 
-              src={getDisplayImage()} 
-              alt={`${auction.title} placeholder`}
-              className="w-full h-full object-cover opacity-75"
-            />
-          )}
+    <Card className="fintech-card fintech-shadow-lg bg-card/95 backdrop-blur-sm border border-border/60 overflow-hidden hover:border-border transition-all duration-300">
+      <div className="lg:flex">
+        <div className="lg:w-64 h-56 lg:h-64 bg-muted/30 flex items-center justify-center overflow-hidden relative">
+          <img 
+            src={getDisplayImage()} 
+            alt={auction.image_urls && auction.image_urls.length > 0 ? auction.title : `${auction.title} placeholder`}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute top-3 right-3">
+            <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              auction.status === 'active' 
+                ? 'bg-fintech-green/10 text-fintech-green border border-fintech-green/20' 
+                : 'bg-muted text-fintech-gray border border-border'
+            }`}>
+              {auction.status.toUpperCase()}
+            </div>
+          </div>
         </div>
         
-        <div className="flex-1 p-6">
-          <div className="flex items-start justify-between mb-4">
+        <div className="flex-1 p-8">
+          <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-xl font-serif font-semibold">{auction.title}</h3>
-                <Badge variant={auction.status === 'active' ? 'default' : 'secondary'}>
-                  {auction.status}
-                </Badge>
+              <div className="flex items-center gap-4 mb-3">
+                <h3 className="text-2xl font-bold text-foreground tracking-tight">{auction.title}</h3>
                 {isLeading && (
-                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                    <Crown className="h-3 w-3 mr-1" />
-                    Leading
-                  </Badge>
+                  <div className="px-3 py-1 bg-gradient-to-r from-fintech-green/10 to-emerald-50 text-fintech-green border border-fintech-green/20 rounded-full flex items-center gap-1.5">
+                    <Crown className="h-3.5 w-3.5" />
+                    <span className="text-sm font-semibold">Leading</span>
+                  </div>
                 )}
                 {myBid && !isLeading && (
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                    My Bid: ${myBid.toLocaleString()}
-                  </Badge>
+                  <div className="px-3 py-1 bg-fintech-blue/10 text-fintech-blue border border-fintech-blue/20 rounded-full">
+                    <span className="text-sm font-semibold">My Bid: ${myBid.toLocaleString()}</span>
+                  </div>
                 )}
               </div>
-              <p className="text-muted-foreground mb-4">{auction.description}</p>
+              <p className="text-fintech-gray mb-6 leading-relaxed">{auction.description}</p>
               
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm mb-4">
-                <div>
-                  <p className="text-muted-foreground">Starting Bid</p>
-                  <p className="font-semibold">${auction.starting_bid.toLocaleString()}</p>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+                <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
+                  <p className="text-xs font-semibold text-fintech-gray uppercase tracking-wide mb-2">Starting Bid</p>
+                  <p className="text-lg font-bold text-foreground">${auction.starting_bid.toLocaleString()}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Current Bid</p>
-                  <p className="text-2xl font-bold text-primary">
+                <div className="bg-gradient-to-br from-fintech-blue/5 to-blue-50/50 rounded-xl p-4 border border-fintech-blue/20">
+                  <p className="text-xs font-semibold text-fintech-blue uppercase tracking-wide mb-2">Current Bid</p>
+                  <p className="text-2xl font-bold text-fintech-blue">
                     ${currentBid.toLocaleString()}
                   </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Bid Increment</p>
-                  <p className="font-semibold">${auction.bid_increment.toLocaleString()}</p>
+                <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
+                  <p className="text-xs font-semibold text-fintech-gray uppercase tracking-wide mb-2">Increment</p>
+                  <p className="text-lg font-bold text-foreground">${auction.bid_increment.toLocaleString()}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Time Left</p>
-                  <p className="font-semibold flex items-center gap-1">
-                    <Timer className="h-3 w-3" />
+                <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
+                  <p className="text-xs font-semibold text-fintech-gray uppercase tracking-wide mb-2">Time Left</p>
+                  <p className="text-lg font-bold text-foreground flex items-center gap-2">
+                    <Timer className="h-4 w-4 text-fintech-gray" />
                     {getTimeRemaining()}
                   </p>
                 </div>
                 {auction.status === 'active' && (
-                  <div>
-                    <p className="text-muted-foreground">Min Next Bid</p>
-                    <p className="font-semibold text-green-600">
+                  <div className="bg-gradient-to-br from-fintech-green/5 to-emerald-50/50 rounded-xl p-4 border border-fintech-green/20">
+                    <p className="text-xs font-semibold text-fintech-green uppercase tracking-wide mb-2">Min Next Bid</p>
+                    <p className="text-lg font-bold text-fintech-green">
                       ${minNextBid.toLocaleString()}
                     </p>
                   </div>
@@ -168,15 +166,18 @@ const AuctionCard = ({
               variant="outline"
               size="sm"
               onClick={onToggleWatchlist}
-              className={isWatched ? 'text-red-600' : ''}
+              className={`ml-4 ${isWatched 
+                ? 'border-fintech-red/20 bg-fintech-red/5 text-fintech-red hover:bg-fintech-red/10' 
+                : 'border-border hover:bg-muted'
+              }`}
             >
               <Heart className={`h-4 w-4 ${isWatched ? 'fill-current' : ''}`} />
             </Button>
           </div>
           
           {auction.status === 'active' && (
-            <div className="flex gap-3">
-              <div className="flex-1 flex gap-2">
+            <div className="flex gap-4">
+              <div className="flex-1 flex gap-3">
                 <Input
                   type="number"
                   placeholder={`Min: $${minNextBid.toLocaleString()}`}
@@ -184,43 +185,44 @@ const AuctionCard = ({
                   onChange={(e) => onBidChange(e.target.value)}
                   step={auction.bid_increment}
                   min={minNextBid}
-                  className="max-w-xs"
+                  className="max-w-xs h-12 bg-background border-border focus:border-fintech-blue transition-colors"
                   disabled={isPlacingBid || !canBid}
                 />
                 <Button 
                   onClick={onPlaceBid}
-                  className="bg-primary hover:bg-primary/90"
+                  className="fintech-button h-12 px-8"
                   disabled={isPlacingBid || !canBid}
                 >
                   {isPlacingBid ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <DollarSign className="h-4 w-4 mr-1" />
+                    <DollarSign className="h-4 w-4 mr-2" />
                   )}
                   Place Bid
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={onQuickBid}
+                  className="fintech-button-secondary h-12 px-6"
                   disabled={isPlacingBid || !canBid}
                 >
-                  Quick Bid: ${minNextBid.toLocaleString()}
+                  Quick: ${minNextBid.toLocaleString()}
                 </Button>
               </div>
             </div>
           )}
           
           {auction.status === 'upcoming' && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <AlertCircle className="h-4 w-4" />
-              <span>Auction hasn't started yet</span>
+            <div className="flex items-center gap-3 text-fintech-gray bg-muted/30 rounded-xl p-4 border border-border/50">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-medium">Auction hasn't started yet</span>
             </div>
           )}
           
           {!canBid && auction.status === 'active' && (
-            <div className="flex items-center gap-2 text-yellow-600 mt-2">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">Bidding restricted due to recent win</span>
+            <div className="flex items-center gap-3 text-amber-700 bg-amber-50 rounded-xl p-4 border border-amber-200/60 mt-4">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-medium">Bidding restricted due to recent win</span>
             </div>
           )}
         </div>

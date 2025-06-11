@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Gavel } from 'lucide-react';
+import { Loader2, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const LoginForm = () => {
@@ -43,45 +43,45 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-primary rounded-full">
-              <Gavel className="h-8 w-8 text-primary-foreground" />
+          <div className="flex items-center justify-center mb-6">
+            <div className="p-4 bg-gradient-to-br from-fintech-blue to-fintech-blue-light rounded-2xl shadow-lg">
+              <TrendingUp className="h-10 w-10 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-semibold text-foreground mb-2">
-            Auction House
+          <h1 className="text-4xl font-bold text-foreground mb-3 tracking-tight">
+            AuctionTech
           </h1>
-          <p className="text-muted-foreground">
-            Premium bidding platform
+          <p className="text-fintech-gray text-lg font-medium">
+            Enterprise Auction Platform
           </p>
         </div>
 
-        <Card className="shadow-lg border-0 bg-card/80 backdrop-blur">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Welcome Back</CardTitle>
-            <CardDescription>
-              Sign in to your account
+        <Card className="fintech-card fintech-shadow-lg border-0 bg-card/95 backdrop-blur-sm">
+          <CardHeader className="space-y-2 text-center pb-6">
+            <CardTitle className="text-2xl font-semibold text-foreground">Sign In</CardTitle>
+            <CardDescription className="text-fintech-gray">
+              Access your auction dashboard
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+          <CardContent className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium text-foreground">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder="your.email@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-11"
+                  className="h-12 bg-background border-border focus:border-fintech-blue transition-colors"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -89,18 +89,18 @@ const LoginForm = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="h-11"
+                  className="h-12 bg-background border-border focus:border-fintech-blue transition-colors"
                 />
               </div>
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-primary hover:bg-primary/90" 
+                className="w-full h-12 fintech-button text-white font-medium text-base" 
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Authenticating...
                   </>
                 ) : (
                   'Sign In'
@@ -108,14 +108,20 @@ const LoginForm = () => {
               </Button>
             </form>
             
-            <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">Demo Admin Account:</p>
-              <div className="space-y-1 text-xs">
-                <p><strong>Email:</strong> admin@auction.com</p>
-                <p><strong>Password:</strong> admin123</p>
+            <div className="mt-8 p-5 bg-muted/30 rounded-xl border border-border/50">
+              <p className="text-sm font-medium text-fintech-gray mb-3">Demo Admin Credentials:</p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-fintech-gray">Email:</span>
+                  <span className="font-mono text-foreground">admin@auction.com</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-fintech-gray">Password:</span>
+                  <span className="font-mono text-foreground">admin123</span>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Use the demo admin credentials to access the platform
+              <p className="text-xs text-fintech-gray-light mt-3">
+                Use these credentials to access the platform demo
               </p>
             </div>
           </CardContent>
