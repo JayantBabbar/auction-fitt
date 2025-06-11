@@ -100,7 +100,7 @@ export const usePlaceBid = () => {
       });
       
       if (error) throw error;
-      return data as PlaceBidResponse;
+      return data as unknown as PlaceBidResponse;
     },
     onSuccess: (data, variables) => {
       if (data.success) {
