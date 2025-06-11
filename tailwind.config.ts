@@ -20,8 +20,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-				serif: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+				sans: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
+				serif: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -61,16 +61,6 @@ export default {
 					DEFAULT: 'hsl(var(--auction-gold))',
 					foreground: 'hsl(var(--auction-gold-foreground))'
 				},
-				'fintech-blue': {
-					DEFAULT: 'hsl(var(--fintech-blue))',
-					light: 'hsl(var(--fintech-blue-light))'
-				},
-				'fintech-gray': {
-					DEFAULT: 'hsl(var(--fintech-gray))',
-					light: 'hsl(var(--fintech-gray-light))'
-				},
-				'fintech-green': 'hsl(var(--fintech-green))',
-				'fintech-red': 'hsl(var(--fintech-red))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -113,23 +103,12 @@ export default {
 						opacity: '1',
 						transform: 'translateY(0)'
 					}
-				},
-				'slide-in': {
-					'0%': {
-						opacity: '0',
-						transform: 'translateX(-10px)'
-					},
-					'100%': {
-						opacity: '1',
-						transform: 'translateX(0)'
-					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-in': 'fade-in 0.5s ease-out',
-				'slide-in': 'slide-in 0.3s ease-out'
+				'fade-in': 'fade-in 0.5s ease-out'
 			}
 		}
 	},
