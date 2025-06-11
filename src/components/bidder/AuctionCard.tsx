@@ -10,7 +10,8 @@ import {
   Crown, 
   Heart, 
   Eye, 
-  AlertCircle 
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
@@ -26,6 +27,8 @@ interface AuctionCardProps {
   isWatched?: boolean;
   isLeading?: boolean;
   myBid?: number;
+  isPlacingBid?: boolean;
+  canBid?: boolean;
 }
 
 const AuctionCard = ({
@@ -37,7 +40,9 @@ const AuctionCard = ({
   onQuickBid,
   isWatched = false,
   isLeading = false,
-  myBid
+  myBid,
+  isPlacingBid = false,
+  canBid = true
 }: AuctionCardProps) => {
   const calculateMinNextBid = () => {
     return (auction.current_bid || auction.starting_bid) + auction.bid_increment;
@@ -147,17 +152,24 @@ const AuctionCard = ({
                   step={auction.bid_increment}
                   min={minNextBid}
                   className="max-w-xs"
+                  disabled={isPlacingBid || !canBid}
                 />
                 <Button 
                   onClick={onPlaceBid}
                   className="bg-primary hover:bg-primary/90"
+                  disabled={isPlacingBid || !canBid}
                 >
-                  <DollarSign className="h-4 w-4 mr-1" />
+                  {isPlacingBid ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <DollarSign className="h-4 w-4 mr-1" />
+                  )}
                   Place Bid
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={onQuickBid}
+                  disabled={isPlacingBid || !canBid}
                 >
                   Quick Bid: ${minNextBid.toLocaleString()}
                 </Button>
@@ -169,6 +181,13 @@ const AuctionCard = ({
             <div className="flex items-center gap-2 text-muted-foreground">
               <AlertCircle className="h-4 w-4" />
               <span>Auction hasn't started yet</span>
+            </div>
+          )}
+          
+          {!canBid && auction.status === 'active' && (
+            <div className="flex items-center gap-2 text-yellow-600 mt-2">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm">Bidding restricted due to recent win</span>
             </div>
           )}
         </div>

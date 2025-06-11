@@ -41,6 +41,41 @@ export type Database = {
           },
         ]
       }
+      auction_winners: {
+        Row: {
+          auction_id: string
+          bidding_restricted_until: string
+          id: string
+          winner_id: string
+          winning_bid: number
+          won_at: string
+        }
+        Insert: {
+          auction_id: string
+          bidding_restricted_until?: string
+          id?: string
+          winner_id: string
+          winning_bid: number
+          won_at?: string
+        }
+        Update: {
+          auction_id?: string
+          bidding_restricted_until?: string
+          id?: string
+          winner_id?: string
+          winning_bid?: number
+          won_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auction_winners_auction_id_fkey"
+            columns: ["auction_id"]
+            isOneToOne: false
+            referencedRelation: "auctions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auctions: {
         Row: {
           auction_duration: number
@@ -113,6 +148,41 @@ export type Database = {
         }
         Relationships: []
       }
+      bids: {
+        Row: {
+          amount: number
+          auction_id: string
+          bidder_id: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          auction_id: string
+          bidder_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          auction_id?: string
+          bidder_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bids_auction_id_fkey"
+            columns: ["auction_id"]
+            isOneToOne: false
+            referencedRelation: "auctions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -145,13 +215,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_user_bid: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       check_auction_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      end_auction: {
+        Args: { p_auction_id: string }
+        Returns: Json
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      place_bid: {
+        Args: { p_auction_id: string; p_bidder_id: string; p_amount: number }
+        Returns: Json
       }
     }
     Enums: {
