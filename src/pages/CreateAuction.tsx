@@ -45,6 +45,30 @@ interface CreateAuctionForm {
   condition: 'excellent' | 'very_good' | 'good' | 'fair' | 'poor';
 }
 
+const getPlaceholderImages = (category: string): string[] => {
+  const categoryLower = category.toLowerCase();
+  
+  if (categoryLower.includes('laptop') || categoryLower.includes('computer')) {
+    return [
+      'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b',
+      'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d'
+    ];
+  }
+  
+  if (categoryLower.includes('tech') || categoryLower.includes('electronic')) {
+    return [
+      'https://images.unsplash.com/photo-1518770660439-4636190af475',
+      'https://images.unsplash.com/photo-1461749280684-dccba630e2f6'
+    ];
+  }
+  
+  // Default placeholder images
+  return [
+    'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d',
+    'https://images.unsplash.com/photo-1649972904349-6e44c42644a7'
+  ];
+};
+
 const CreateAuction = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -102,6 +126,9 @@ const CreateAuction = () => {
       return;
     }
 
+    // Use placeholder images if no images uploaded
+    const finalImageUrls = imageUrls.length > 0 ? imageUrls : getPlaceholderImages(data.category);
+
     try {
       const auctionData = {
         created_by: user.id,
@@ -115,7 +142,7 @@ const CreateAuction = () => {
         start_time: data.start_time.toISOString(),
         auction_duration: durationDays,
         status: 'draft' as const,
-        image_urls: imageUrls,
+        image_urls: finalImageUrls,
       };
 
       console.log('Submitting auction data:', auctionData);
@@ -488,7 +515,7 @@ const CreateAuction = () => {
                     Asset Images
                   </CardTitle>
                   <CardDescription className="text-base">
-                    Upload high-quality images of the asset
+                    Upload high-quality images of the asset (optional - placeholder images will be used if none are uploaded)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -66,14 +66,47 @@ const AuctionCard = ({
     return `${minutes}m`;
   };
 
+  const getDisplayImage = () => {
+    if (auction.image_urls && auction.image_urls.length > 0) {
+      return auction.image_urls[0];
+    }
+    
+    // Return placeholder image based on category
+    const category = auction.category.toLowerCase();
+    if (category.includes('laptop') || category.includes('computer')) {
+      return 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b';
+    }
+    if (category.includes('tech') || category.includes('electronic')) {
+      return 'https://images.unsplash.com/photo-1518770660439-4636190af475';
+    }
+    if (category.includes('programming') || category.includes('software')) {
+      return 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6';
+    }
+    
+    // Default placeholder
+    return 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d';
+  };
+
   const currentBid = auction.current_bid || auction.starting_bid;
   const minNextBid = calculateMinNextBid();
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
       <div className="md:flex">
-        <div className="md:w-48 h-48 bg-muted flex items-center justify-center">
-          <Eye className="h-12 w-12 text-muted-foreground" />
+        <div className="md:w-48 h-48 bg-muted flex items-center justify-center overflow-hidden">
+          {auction.image_urls && auction.image_urls.length > 0 ? (
+            <img 
+              src={getDisplayImage()} 
+              alt={auction.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img 
+              src={getDisplayImage()} 
+              alt={`${auction.title} placeholder`}
+              className="w-full h-full object-cover opacity-75"
+            />
+          )}
         </div>
         
         <div className="flex-1 p-6">
