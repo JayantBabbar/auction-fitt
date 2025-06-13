@@ -32,7 +32,7 @@ const BidderDashboard = () => {
     if (bidAmount < minNextBid) {
       return {
         isValid: false,
-        message: `Minimum bid is $${minNextBid.toLocaleString()} (current bid + $${auction.bid_increment} increment)`
+        message: `Minimum bid is ₹${minNextBid.toLocaleString()} (current bid + ₹${auction.bid_increment} increment)`
       };
     }
 
@@ -40,7 +40,7 @@ const BidderDashboard = () => {
     if (bidDifference % auction.bid_increment !== 0) {
       return {
         isValid: false,
-        message: `Bid must be in increments of $${auction.bid_increment}`
+        message: `Bid must be in increments of ₹${auction.bid_increment}`
       };
     }
 

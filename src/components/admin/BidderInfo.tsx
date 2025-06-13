@@ -125,7 +125,7 @@ const BidderInfo = ({ auctionId, auctionTitle, auctionStatus }: BidderInfoProps)
               </div>
               <div className="text-right">
                 <div className="flex items-center gap-1 text-2xl font-bold text-auction-gold">
-                  <DollarSign className="h-5 w-5" />
+                  <span className="text-lg">₹</span>
                   {Number(highestBidder.highest_bid).toLocaleString()}
                 </div>
                 <p className="text-xs text-slate-500">Highest Bid</p>

@@ -105,7 +105,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'Revenue Today',
-      value: '$67,500',
+      value: '₹67,500',
       icon: DollarSign,
       color: 'text-auction-gold',
       bgColor: 'bg-yellow-50',
@@ -316,11 +316,11 @@ const AdminDashboard = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div className="bg-slate-50/50 rounded-lg p-3">
                             <p className="text-xs font-medium text-slate-500 mb-1">Starting Bid</p>
-                            <p className="font-semibold text-slate-900">${Number(auction.starting_bid).toLocaleString()}</p>
+                            <p className="font-semibold text-slate-900">₹{Number(auction.starting_bid).toLocaleString()}</p>
                           </div>
                           <div className="bg-gradient-to-br from-auction-gold/10 to-amber-50 rounded-lg p-3">
                             <p className="text-xs font-medium text-slate-500 mb-1">Current Bid</p>
-                            <p className="font-semibold text-auction-gold">${Number(auction.current_bid || 0).toLocaleString()}</p>
+                            <p className="font-semibold text-auction-gold">₹{Number(auction.current_bid || 0).toLocaleString()}</p>
                           </div>
                           <div className="bg-blue-50/50 rounded-lg p-3">
                             <p className="text-xs font-medium text-slate-500 mb-1">Bidders</p>

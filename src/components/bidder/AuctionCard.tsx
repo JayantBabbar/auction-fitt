@@ -125,7 +125,7 @@ const AuctionCard = ({
                 )}
                 {myBid && !isLeading && (
                   <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                    My Bid: ${myBid.toLocaleString()}
+                    My Bid: ₹{myBid.toLocaleString()}
                   </Badge>
                 )}
               </div>
@@ -134,17 +134,17 @@ const AuctionCard = ({
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm mb-4">
                 <div>
                   <p className="text-muted-foreground">Starting Bid</p>
-                  <p className="font-semibold">${auction.starting_bid.toLocaleString()}</p>
+                  <p className="font-semibold">₹{auction.starting_bid.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Current Bid</p>
                   <p className="text-2xl font-bold text-primary">
-                    ${currentBid.toLocaleString()}
+                    ₹{currentBid.toLocaleString()}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Bid Increment</p>
-                  <p className="font-semibold">${auction.bid_increment.toLocaleString()}</p>
+                  <p className="font-semibold">₹{auction.bid_increment.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Time Left</p>
@@ -157,7 +157,7 @@ const AuctionCard = ({
                   <div>
                     <p className="text-muted-foreground">Min Next Bid</p>
                     <p className="font-semibold text-green-600">
-                      ${minNextBid.toLocaleString()}
+                      ₹{minNextBid.toLocaleString()}
                     </p>
                   </div>
                 )}
@@ -179,7 +179,7 @@ const AuctionCard = ({
               <div className="flex-1 flex gap-2">
                 <Input
                   type="number"
-                  placeholder={`Min: $${minNextBid.toLocaleString()}`}
+                  placeholder={`Min: ₹${minNextBid.toLocaleString()}`}
                   value={bidAmount}
                   onChange={(e) => onBidChange(e.target.value)}
                   step={auction.bid_increment}
@@ -204,7 +204,7 @@ const AuctionCard = ({
                   onClick={onQuickBid}
                   disabled={isPlacingBid || !canBid}
                 >
-                  Quick Bid: ${minNextBid.toLocaleString()}
+                  Quick Bid: ₹{minNextBid.toLocaleString()}
                 </Button>
               </div>
             </div>
