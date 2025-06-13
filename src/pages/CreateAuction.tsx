@@ -41,7 +41,7 @@ interface CreateAuctionForm {
   reserve_price: number;
   bid_increment: number;
   start_time: Date;
-  end_time: Date;
+  duration: number; // Duration in hours
   condition: 'excellent' | 'very_good' | 'good' | 'fair' | 'poor';
 }
 
@@ -85,7 +85,7 @@ const CreateAuction = () => {
       reserve_price: 0,
       bid_increment: 50,
       start_time: new Date(),
-      end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      duration: 24, // Default to 24 hours
       condition: 'excellent',
     },
   });
@@ -113,18 +113,11 @@ const CreateAuction = () => {
     console.log('User creating auction:', user);
     console.log('Form data:', data);
 
-    // Calculate duration in days
-    const durationMs = data.end_time.getTime() - data.start_time.getTime();
-    const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+    // Calculate end_time based on start_time + duration in hours
+    const endTime = new Date(data.start_time.getTime() + (data.duration * 60 * 60 * 1000));
 
-    if (durationDays <= 0) {
-      toast({
-        title: "Invalid Duration",
-        description: "End time must be after start time.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Calculate duration in days for the database
+    const durationDays = Math.ceil(data.duration / 24);
 
     // Use placeholder images if no images uploaded
     const finalImageUrls = imageUrls.length > 0 ? imageUrls : getPlaceholderImages(data.category);
@@ -140,6 +133,7 @@ const CreateAuction = () => {
         bid_increment: data.bid_increment,
         condition: data.condition,
         start_time: data.start_time.toISOString(),
+        end_time: endTime.toISOString(),
         auction_duration: durationDays,
         status: 'draft' as const,
         image_urls: finalImageUrls,
@@ -462,41 +456,29 @@ const CreateAuction = () => {
 
                     <FormField
                       control={form.control}
-                      name="end_time"
-                      rules={{ required: "End time is required" }}
+                      name="duration"
+                      rules={{ required: "Duration is required" }}
                       render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel className="text-sm font-semibold">Auction End Date & Time</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "h-11 pl-3 text-left font-normal border-border/60 hover:border-primary transition-colors",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP 'at' p")
-                                  ) : (
-                                    <span>Pick end date & time</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) => date < form.watch('start_time') || date < new Date()}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold">Auction Duration</FormLabel>
+                          <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                            <FormControl>
+                              <SelectTrigger className="h-11 border-border/60 focus:border-primary">
+                                <SelectValue placeholder="Select duration" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="1">1 hour</SelectItem>
+                              <SelectItem value="2">2 hours</SelectItem>
+                              <SelectItem value="3">3 hours</SelectItem>
+                              <SelectItem value="5">5 hours</SelectItem>
+                              <SelectItem value="7">7 hours</SelectItem>
+                              <SelectItem value="10">10 hours</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription className="text-sm">
+                            How long the auction will run from the start time
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
