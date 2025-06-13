@@ -164,7 +164,7 @@ const AuctionCard = ({
                 
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm mb-4">
                   <div>
-                    <p className="text-muted-foreground">Starting Bid</p>
+                    <p className="text-muted-foreground">Base Price</p>
                     <p className="font-semibold">₹{auction.starting_bid.toLocaleString()}</p>
                   </div>
                   <div>
@@ -174,7 +174,7 @@ const AuctionCard = ({
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Bid Increment</p>
+                    <p className="text-muted-foreground">Incremental Bid</p>
                     <p className="font-semibold">₹{auction.bid_increment.toLocaleString()}</p>
                   </div>
                   <div>

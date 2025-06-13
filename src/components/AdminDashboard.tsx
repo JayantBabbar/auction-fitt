@@ -20,7 +20,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  BarChart3,
   Activity,
   Loader2
 } from 'lucide-react';
@@ -113,8 +112,8 @@ const AdminDashboard = () => {
       changeType: 'positive'
     },
     {
-      title: 'Success Rate',
-      value: '94%',
+      title: 'Lifetime Revenue',
+      value: '₹2.4M',
       icon: TrendingUp,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
@@ -163,10 +162,6 @@ const AdminDashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Analytics
-              </Button>
               <Button variant="outline" onClick={logout} className="border-slate-200 text-slate-600 hover:bg-slate-50">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -315,7 +310,7 @@ const AdminDashboard = () => {
                       <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div className="bg-slate-50/50 rounded-lg p-3">
-                            <p className="text-xs font-medium text-slate-500 mb-1">Starting Bid</p>
+                            <p className="text-xs font-medium text-slate-500 mb-1">Base Price</p>
                             <p className="font-semibold text-slate-900">₹{Number(auction.starting_bid).toLocaleString()}</p>
                           </div>
                           <div className="bg-gradient-to-br from-auction-gold/10 to-amber-50 rounded-lg p-3">
@@ -372,7 +367,7 @@ const AdminDashboard = () => {
             </div>
             <Card className="border-slate-200/60 bg-white/70">
               <CardContent className="p-8 text-center">
-                <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                <TrendingUp className="h-12 w-12 text-slate-400 mx-auto mb-4" />
                 <p className="text-slate-500 font-medium">Advanced reporting features coming soon...</p>
                 <p className="text-sm text-slate-400 mt-1">Real-time analytics and detailed performance reports</p>
               </CardContent>
