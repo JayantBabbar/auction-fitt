@@ -4,6 +4,7 @@ export interface User {
   email: string;
   role: 'admin' | 'bidder';
   name: string;
+  passwordResetRequired?: boolean;
 }
 
 export interface AuthContextType {

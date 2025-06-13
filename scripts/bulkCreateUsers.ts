@@ -1,6 +1,7 @@
+
 import { createClient } from '@supabase/supabase-js'
-import users from './users_bulk_create.json' // path to your JSON file
-import 'dotenv/config' // to load from .env file
+import users from './users_bulk_create.json'
+import 'dotenv/config'
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -8,12 +9,17 @@ const supabase = createClient(
 )
 
 async function createUsers() {
+  console.log(`Starting bulk creation of ${users.length} users...`)
+  
   for (const user of users) {
     try {
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: user.email,
         password: user.password,
-        email_confirm: true
+        email_confirm: true,
+        user_metadata: {
+          name: user.name
+        }
       })
 
       if (authError) {
@@ -21,27 +27,14 @@ async function createUsers() {
         continue
       }
 
-      const { id } = authData.user
-
-      const { error: profileError } = await supabase
-        .from('profile')
-        .insert({
-          id,
-          name: user.name,
-          email: user.email,
-          role: user.role
-        })
-
-      if (profileError) {
-        console.error(`⚠️ Profile insert failed for ${user.email}:`, profileError.message)
-      } else {
-        console.log(`✅ Created ${user.email} with profile`)
-      }
+      console.log(`✅ Created ${user.email} with profile`)
 
     } catch (err) {
       console.error(`🔥 Unexpected error for ${user.email}:`, err)
     }
   }
+  
+  console.log('Bulk user creation completed!')
 }
 
 createUsers()

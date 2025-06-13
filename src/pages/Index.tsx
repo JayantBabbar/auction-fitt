@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import LoginForm from '@/components/LoginForm';
 import AdminDashboard from '@/components/AdminDashboard';
 import BidderDashboard from '@/components/BidderDashboard';
+import PasswordResetForm from '@/components/PasswordResetForm';
 
 const Index = () => {
   const { user, isLoading } = useAuth();
@@ -21,6 +22,11 @@ const Index = () => {
 
   if (!user) {
     return <LoginForm />;
+  }
+
+  // Check if user needs to reset password
+  if (user.passwordResetRequired) {
+    return <PasswordResetForm />;
   }
 
   return user.role === 'admin' ? <AdminDashboard /> : <BidderDashboard />;

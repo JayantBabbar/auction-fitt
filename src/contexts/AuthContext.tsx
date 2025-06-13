@@ -31,7 +31,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: profile.id,
               email: profile.email,
               role: profile.role as 'admin' | 'bidder',
-              name: profile.name
+              name: profile.name,
+              passwordResetRequired: profile.password_reset_required
             });
           }
         } else {
