@@ -83,7 +83,7 @@ const PasswordResetForm = () => {
       // Update the profile to mark password reset as completed
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ password_reset_required: false })
+        .update({ password_reset_required: false } as any)
         .eq('id', user?.id);
 
       if (profileError) {

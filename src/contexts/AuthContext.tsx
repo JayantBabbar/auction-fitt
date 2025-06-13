@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: profile.email,
               role: profile.role as 'admin' | 'bidder',
               name: profile.name,
-              passwordResetRequired: profile.password_reset_required
+              passwordResetRequired: (profile as any).password_reset_required || false
             });
           }
         } else {
