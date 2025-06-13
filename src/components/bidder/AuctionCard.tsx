@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,12 +8,11 @@ import {
   Timer, 
   DollarSign, 
   Crown, 
-  Heart, 
-  Eye, 
   AlertCircle,
   Loader2
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
+import BidIncrementWarning from './BidIncrementWarning';
 
 type Auction = Database['public']['Tables']['auctions']['Row'];
 
@@ -22,9 +21,7 @@ interface AuctionCardProps {
   bidAmount: string;
   onBidChange: (value: string) => void;
   onPlaceBid: () => void;
-  onToggleWatchlist: () => void;
   onQuickBid: () => void;
-  isWatched?: boolean;
   isLeading?: boolean;
   myBid?: number;
   isPlacingBid?: boolean;
@@ -36,16 +33,49 @@ const AuctionCard = ({
   bidAmount,
   onBidChange,
   onPlaceBid,
-  onToggleWatchlist,
   onQuickBid,
-  isWatched = false,
   isLeading = false,
   myBid,
   isPlacingBid = false,
   canBid = true
 }: AuctionCardProps) => {
+  const [showWarning, setShowWarning] = useState(false);
+
   const calculateMinNextBid = () => {
     return (auction.current_bid || auction.starting_bid) + auction.bid_increment;
+  };
+
+  const validateBidAmount = (bidAmount: number) => {
+    const minNextBid = calculateMinNextBid();
+    
+    if (bidAmount < minNextBid) {
+      return {
+        isValid: false,
+        message: `Minimum bid is ₹${minNextBid.toLocaleString()} (current bid + ₹${auction.bid_increment} increment)`
+      };
+    }
+
+    const bidDifference = bidAmount - (auction.current_bid || auction.starting_bid);
+    if (bidDifference % auction.bid_increment !== 0) {
+      return {
+        isValid: false,
+        message: `Bid must be in increments of ₹${auction.bid_increment}`
+      };
+    }
+
+    return { isValid: true, message: '' };
+  };
+
+  const handlePlaceBid = () => {
+    const enteredAmount = parseFloat(bidAmount || '0');
+    const validation = validateBidAmount(enteredAmount);
+    
+    if (!validation.isValid) {
+      setShowWarning(true);
+      return;
+    }
+    
+    onPlaceBid();
   };
 
   const getTimeRemaining = () => {
@@ -91,141 +121,142 @@ const AuctionCard = ({
   const minNextBid = calculateMinNextBid();
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      <div className="md:flex">
-        <div className="md:w-48 h-48 bg-muted flex items-center justify-center overflow-hidden">
-          {auction.image_urls && auction.image_urls.length > 0 ? (
-            <img 
-              src={getDisplayImage()} 
-              alt={auction.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <img 
-              src={getDisplayImage()} 
-              alt={`${auction.title} placeholder`}
-              className="w-full h-full object-cover opacity-75"
-            />
-          )}
-        </div>
-        
-        <div className="flex-1 p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-xl font-serif font-semibold">{auction.title}</h3>
-                <Badge variant={auction.status === 'active' ? 'default' : 'secondary'}>
-                  {auction.status}
-                </Badge>
-                {isLeading && (
-                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                    <Crown className="h-3 w-3 mr-1" />
-                    Leading
+    <>
+      <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+        <div className="md:flex">
+          <div className="md:w-48 h-48 bg-muted flex items-center justify-center overflow-hidden">
+            {auction.image_urls && auction.image_urls.length > 0 ? (
+              <img 
+                src={getDisplayImage()} 
+                alt={auction.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img 
+                src={getDisplayImage()} 
+                alt={`${auction.title} placeholder`}
+                className="w-full h-full object-cover opacity-75"
+              />
+            )}
+          </div>
+          
+          <div className="flex-1 p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-xl font-serif font-semibold">{auction.title}</h3>
+                  <Badge variant={auction.status === 'active' ? 'default' : 'secondary'}>
+                    {auction.status}
                   </Badge>
-                )}
-                {myBid && !isLeading && (
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                    My Bid: ₹{myBid.toLocaleString()}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-muted-foreground mb-4">{auction.description}</p>
-              
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm mb-4">
-                <div>
-                  <p className="text-muted-foreground">Starting Bid</p>
-                  <p className="font-semibold">₹{auction.starting_bid.toLocaleString()}</p>
+                  {isLeading && (
+                    <Badge className="bg-green-100 text-green-800 border-green-200">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Leading
+                    </Badge>
+                  )}
+                  {myBid && !isLeading && (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                      My Bid: ₹{myBid.toLocaleString()}
+                    </Badge>
+                  )}
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Current Bid</p>
-                  <p className="text-2xl font-bold text-primary">
-                    ₹{currentBid.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Bid Increment</p>
-                  <p className="font-semibold">₹{auction.bid_increment.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Time Left</p>
-                  <p className="font-semibold flex items-center gap-1">
-                    <Timer className="h-3 w-3" />
-                    {getTimeRemaining()}
-                  </p>
-                </div>
-                {auction.status === 'active' && (
+                <p className="text-muted-foreground mb-4">{auction.description}</p>
+                
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm mb-4">
                   <div>
-                    <p className="text-muted-foreground">Min Next Bid</p>
-                    <p className="font-semibold text-green-600">
-                      ₹{minNextBid.toLocaleString()}
+                    <p className="text-muted-foreground">Starting Bid</p>
+                    <p className="font-semibold">₹{auction.starting_bid.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Current Bid</p>
+                    <p className="text-2xl font-bold text-primary">
+                      ₹{currentBid.toLocaleString()}
                     </p>
                   </div>
-                )}
+                  <div>
+                    <p className="text-muted-foreground">Bid Increment</p>
+                    <p className="font-semibold">₹{auction.bid_increment.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Time Left</p>
+                    <p className="font-semibold flex items-center gap-1">
+                      <Timer className="h-3 w-3" />
+                      {getTimeRemaining()}
+                    </p>
+                  </div>
+                  {auction.status === 'active' && (
+                    <div>
+                      <p className="text-muted-foreground">Min Next Bid</p>
+                      <p className="font-semibold text-green-600">
+                        ₹{minNextBid.toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggleWatchlist}
-              className={isWatched ? 'text-red-600' : ''}
-            >
-              <Heart className={`h-4 w-4 ${isWatched ? 'fill-current' : ''}`} />
-            </Button>
-          </div>
-          
-          {auction.status === 'active' && (
-            <div className="flex gap-3">
-              <div className="flex-1 flex gap-2">
-                <Input
-                  type="number"
-                  placeholder={`Min: ₹${minNextBid.toLocaleString()}`}
-                  value={bidAmount}
-                  onChange={(e) => onBidChange(e.target.value)}
-                  step={auction.bid_increment}
-                  min={minNextBid}
-                  className="max-w-xs"
-                  disabled={isPlacingBid || !canBid}
-                />
-                <Button 
-                  onClick={onPlaceBid}
-                  className="bg-primary hover:bg-primary/90"
-                  disabled={isPlacingBid || !canBid}
-                >
-                  {isPlacingBid ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <DollarSign className="h-4 w-4 mr-1" />
-                  )}
-                  Place Bid
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={onQuickBid}
-                  disabled={isPlacingBid || !canBid}
-                >
-                  Quick Bid: ₹{minNextBid.toLocaleString()}
-                </Button>
+            {auction.status === 'active' && (
+              <div className="flex gap-3">
+                <div className="flex-1 flex gap-2">
+                  <Input
+                    type="number"
+                    placeholder={`Min: ₹${minNextBid.toLocaleString()}`}
+                    value={bidAmount}
+                    onChange={(e) => onBidChange(e.target.value)}
+                    step={auction.bid_increment}
+                    min={minNextBid}
+                    className="max-w-xs"
+                    disabled={isPlacingBid || !canBid}
+                  />
+                  <Button 
+                    onClick={handlePlaceBid}
+                    className="bg-primary hover:bg-primary/90"
+                    disabled={isPlacingBid || !canBid}
+                  >
+                    {isPlacingBid ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <DollarSign className="h-4 w-4 mr-1" />
+                    )}
+                    Place Bid
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={onQuickBid}
+                    disabled={isPlacingBid || !canBid}
+                  >
+                    Quick Bid: ₹{minNextBid.toLocaleString()}
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
-          
-          {auction.status === 'upcoming' && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <AlertCircle className="h-4 w-4" />
-              <span>Auction hasn't started yet</span>
-            </div>
-          )}
-          
-          {!canBid && auction.status === 'active' && (
-            <div className="flex items-center gap-2 text-yellow-600 mt-2">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">Bidding restricted due to recent win</span>
-            </div>
-          )}
+            )}
+            
+            {auction.status === 'upcoming' && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <AlertCircle className="h-4 w-4" />
+                <span>Auction hasn't started yet</span>
+              </div>
+            )}
+            
+            {!canBid && auction.status === 'active' && (
+              <div className="flex items-center gap-2 text-yellow-600 mt-2">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm">Bidding restricted due to recent win</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+
+      <BidIncrementWarning
+        isOpen={showWarning}
+        onClose={() => setShowWarning(false)}
+        currentBid={currentBid}
+        bidIncrement={auction.bid_increment}
+        enteredAmount={parseFloat(bidAmount || '0')}
+      />
+    </>
   );
 };
 

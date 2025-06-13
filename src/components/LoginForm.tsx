@@ -107,17 +107,6 @@ const LoginForm = () => {
                 )}
               </Button>
             </form>
-            
-            <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">Demo Admin Account:</p>
-              <div className="space-y-1 text-xs">
-                <p><strong>Email:</strong> admin@auction.com</p>
-                <p><strong>Password:</strong> admin123</p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Use the demo admin credentials to access the platform
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>

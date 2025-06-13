@@ -20,31 +20,9 @@ const BidderDashboard = () => {
   const activeAuctions = auctions.filter(auction => auction.status === 'active');
   
   const [bidAmounts, setBidAmounts] = useState<{[key: string]: string}>({});
-  const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
 
   const calculateMinNextBid = (auction: any) => {
     return (auction.current_bid || auction.starting_bid) + auction.bid_increment;
-  };
-
-  const validateBidAmount = (auction: any, bidAmount: number) => {
-    const minNextBid = calculateMinNextBid(auction);
-    
-    if (bidAmount < minNextBid) {
-      return {
-        isValid: false,
-        message: `Minimum bid is ₹${minNextBid.toLocaleString()} (current bid + ₹${auction.bid_increment} increment)`
-      };
-    }
-
-    const bidDifference = bidAmount - (auction.current_bid || auction.starting_bid);
-    if (bidDifference % auction.bid_increment !== 0) {
-      return {
-        isValid: false,
-        message: `Bid must be in increments of ₹${auction.bid_increment}`
-      };
-    }
-
-    return { isValid: true, message: '' };
   };
 
   const handleBid = async (auctionId: string) => {
@@ -58,20 +36,6 @@ const BidderDashboard = () => {
     }
 
     const bidAmount = parseFloat(bidAmounts[auctionId] || '0');
-    const auction = activeAuctions.find(a => a.id === auctionId);
-    
-    if (!auction) return;
-
-    const validation = validateBidAmount(auction, bidAmount);
-    
-    if (!validation.isValid) {
-      toast({
-        title: "Invalid Bid",
-        description: validation.message,
-        variant: "destructive"
-      });
-      return;
-    }
 
     try {
       await placeBidMutation.mutateAsync({
@@ -97,18 +61,6 @@ const BidderDashboard = () => {
     }));
   };
 
-  const toggleWatchlist = (auctionId: string) => {
-    setWatchlist(prev => {
-      const newWatchlist = new Set(prev);
-      if (newWatchlist.has(auctionId)) {
-        newWatchlist.delete(auctionId);
-      } else {
-        newWatchlist.add(auctionId);
-      }
-      return newWatchlist;
-    });
-  };
-
   // Calculate stats from real data
   const getUserBidForAuction = (auctionId: string) => {
     const auctionBids = userBids.filter(bid => bid.auction_id === auctionId);
@@ -129,7 +81,6 @@ const BidderDashboard = () => {
 
   const activeBidsCount = [...new Set(userBids.map(bid => bid.auction_id))].length;
   const leadingBidsCount = getLeadingBids().length;
-  const watchlistCount = watchlist.size;
 
   if (isLoading) {
     return (
@@ -158,7 +109,6 @@ const BidderDashboard = () => {
         <BidderStats 
           activeBids={activeBidsCount}
           leadingBids={leadingBidsCount}
-          watchlistCount={watchlistCount}
           wonAuctions={3}
         />
 
@@ -182,9 +132,7 @@ const BidderDashboard = () => {
                     bidAmount={bidAmounts[auction.id] || ''}
                     onBidChange={(value) => setBidAmounts(prev => ({ ...prev, [auction.id]: value }))}
                     onPlaceBid={() => handleBid(auction.id)}
-                    onToggleWatchlist={() => toggleWatchlist(auction.id)}
                     onQuickBid={() => handleQuickBid(auction.id)}
-                    isWatched={watchlist.has(auction.id)}
                     isLeading={isLeading}
                     myBid={userBid?.amount}
                     isPlacingBid={placeBidMutation.isPending}
