@@ -212,7 +212,28 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      bid_details_admin: {
+        Row: {
+          amount: number | null
+          auction_id: string | null
+          auction_title: string | null
+          bidder_email: string | null
+          bidder_id: string | null
+          bidder_name: string | null
+          created_at: string | null
+          id: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bids_auction_id_fkey"
+            columns: ["auction_id"]
+            isOneToOne: false
+            referencedRelation: "auctions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_user_bid: {
@@ -226,6 +247,26 @@ export type Database = {
       end_auction: {
         Args: { p_auction_id: string }
         Returns: Json
+      }
+      get_auction_bids_admin: {
+        Args: { p_auction_id: string }
+        Returns: {
+          bid_id: string
+          bidder_name: string
+          bidder_email: string
+          bid_amount: number
+          bid_timestamp: string
+        }[]
+      }
+      get_highest_bidder: {
+        Args: { p_auction_id: string }
+        Returns: {
+          bidder_id: string
+          bidder_name: string
+          bidder_email: string
+          highest_bid: number
+          bid_time: string
+        }[]
       }
       get_user_role: {
         Args: { user_id: string }

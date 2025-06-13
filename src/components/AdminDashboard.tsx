@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import BidderInfo from './admin/BidderInfo';
 import { 
   Gavel, 
   Users, 
@@ -241,98 +243,109 @@ const AdminDashboard = () => {
                 </Card>
               ) : (
                 auctions?.map((auction) => (
-                  <Card key={auction.id} className="border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-200 bg-white/70 backdrop-blur-sm">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <CardTitle className="text-xl text-slate-900">{auction.title}</CardTitle>
-                            <Badge className={`${getStatusColor(auction.status)} font-medium`}>
-                              {auction.status}
-                            </Badge>
-                          </div>
-                          <CardDescription className="text-base text-slate-600">
-                            {auction.description}
-                          </CardDescription>
-                          
-                          {/* Display auction images */}
-                          {auction.image_urls && auction.image_urls.length > 0 && (
-                            <div className="mt-4">
-                              <div className="flex gap-2 overflow-x-auto pb-2">
-                                {auction.image_urls.slice(0, 4).map((url, index) => (
-                                  <div key={index} className="flex-shrink-0">
-                                    <img
-                                      src={url}
-                                      alt={`${auction.title} ${index + 1}`}
-                                      className="w-16 h-16 object-cover rounded-md border border-slate-200"
-                                    />
-                                  </div>
-                                ))}
-                                {auction.image_urls.length > 4 && (
-                                  <div className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-md border border-slate-200 flex items-center justify-center">
-                                    <span className="text-xs text-slate-600">
-                                      +{auction.image_urls.length - 4}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
+                  <div key={auction.id} className="space-y-4">
+                    <Card className="border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-200 bg-white/70 backdrop-blur-sm">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <CardTitle className="text-xl text-slate-900">{auction.title}</CardTitle>
+                              <Badge className={`${getStatusColor(auction.status)} font-medium`}>
+                                {auction.status}
+                              </Badge>
                             </div>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="border-slate-200 hover:bg-slate-50">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" className="border-slate-200 hover:bg-slate-50">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          {auction.status === 'draft' && (
+                            <CardDescription className="text-base text-slate-600">
+                              {auction.description}
+                            </CardDescription>
+                            
+                            {/* Display auction images */}
+                            {auction.image_urls && auction.image_urls.length > 0 && (
+                              <div className="mt-4">
+                                <div className="flex gap-2 overflow-x-auto pb-2">
+                                  {auction.image_urls.slice(0, 4).map((url, index) => (
+                                    <div key={index} className="flex-shrink-0">
+                                      <img
+                                        src={url}
+                                        alt={`${auction.title} ${index + 1}`}
+                                        className="w-16 h-16 object-cover rounded-md border border-slate-200"
+                                      />
+                                    </div>
+                                  ))}
+                                  {auction.image_urls.length > 4 && (
+                                    <div className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-md border border-slate-200 flex items-center justify-center">
+                                      <span className="text-xs text-slate-600">
+                                        +{auction.image_urls.length - 4}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" className="border-slate-200 hover:bg-slate-50">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" className="border-slate-200 hover:bg-slate-50">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            {auction.status === 'draft' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600"
+                                onClick={() => handleStartAuction(auction.id, auction.title)}
+                                disabled={updateAuctionMutation.isPending}
+                              >
+                                Start
+                              </Button>
+                            )}
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600"
-                              onClick={() => handleStartAuction(auction.id, auction.title)}
-                              disabled={updateAuctionMutation.isPending}
+                              className="border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                              onClick={() => handleDeleteAuction(auction.id, auction.title)}
+                              disabled={deleteAuctionMutation.isPending}
                             >
-                              Start
+                              <Trash2 className="h-4 w-4" />
                             </Button>
-                          )}
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                            onClick={() => handleDeleteAuction(auction.id, auction.title)}
-                            disabled={deleteAuctionMutation.isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </div>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-slate-50/50 rounded-lg p-3">
-                          <p className="text-xs font-medium text-slate-500 mb-1">Starting Bid</p>
-                          <p className="font-semibold text-slate-900">${Number(auction.starting_bid).toLocaleString()}</p>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="bg-slate-50/50 rounded-lg p-3">
+                            <p className="text-xs font-medium text-slate-500 mb-1">Starting Bid</p>
+                            <p className="font-semibold text-slate-900">${Number(auction.starting_bid).toLocaleString()}</p>
+                          </div>
+                          <div className="bg-gradient-to-br from-auction-gold/10 to-amber-50 rounded-lg p-3">
+                            <p className="text-xs font-medium text-slate-500 mb-1">Current Bid</p>
+                            <p className="font-semibold text-auction-gold">${Number(auction.current_bid || 0).toLocaleString()}</p>
+                          </div>
+                          <div className="bg-blue-50/50 rounded-lg p-3">
+                            <p className="text-xs font-medium text-slate-500 mb-1">Bidders</p>
+                            <p className="font-semibold text-slate-900">{auction.bidder_count}</p>
+                          </div>
+                          <div className="bg-slate-50/50 rounded-lg p-3">
+                            <p className="text-xs font-medium text-slate-500 mb-1">Duration</p>
+                            <p className="font-semibold text-slate-900 flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {auction.auction_duration} days
+                            </p>
+                          </div>
                         </div>
-                        <div className="bg-gradient-to-br from-auction-gold/10 to-amber-50 rounded-lg p-3">
-                          <p className="text-xs font-medium text-slate-500 mb-1">Current Bid</p>
-                          <p className="font-semibold text-auction-gold">${Number(auction.current_bid || 0).toLocaleString()}</p>
-                        </div>
-                        <div className="bg-blue-50/50 rounded-lg p-3">
-                          <p className="text-xs font-medium text-slate-500 mb-1">Bidders</p>
-                          <p className="font-semibold text-slate-900">{auction.bidder_count}</p>
-                        </div>
-                        <div className="bg-slate-50/50 rounded-lg p-3">
-                          <p className="text-xs font-medium text-slate-500 mb-1">Duration</p>
-                          <p className="font-semibold text-slate-900 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {auction.auction_duration} days
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+
+                    {/* Add BidderInfo component for auctions with bids */}
+                    {(auction.status === 'active' || auction.status === 'ended') && auction.bidder_count > 0 && (
+                      <BidderInfo 
+                        auctionId={auction.id}
+                        auctionTitle={auction.title}
+                        auctionStatus={auction.status}
+                      />
+                    )}
+                  </div>
                 ))
               )}
             </div>
