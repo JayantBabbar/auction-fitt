@@ -33,7 +33,7 @@ export const validateBidAmount = (amount: number, minBid: number): { valid: bool
   return { valid: true };
 };
 
-export const validateAuctionTitle = (title: string): { valid: boolean; error?: string } => {
+export const validateAuctionTitle = (title: string): { valid: boolean; error?: string; sanitized?: string } => {
   const sanitized = sanitizeHTML(title.trim());
   
   if (sanitized.length < 3) {
