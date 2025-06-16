@@ -4,8 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
 type Auction = Database['public']['Tables']['auctions']['Row'];
-type AuctionInsert = Database['public']['Tables']['auctions']['Insert'];
 type AuctionUpdate = Database['public']['Tables']['auctions']['Update'];
+
+// Use the secure version of create auction hook
+export { useSecureCreateAuction as useCreateAuction } from '@/hooks/useSecureAuctions';
 
 export const useAuctions = () => {
   return useQuery({
@@ -18,36 +20,6 @@ export const useAuctions = () => {
       
       if (error) throw error;
       return data;
-    },
-  });
-};
-
-export const useCreateAuction = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (auction: AuctionInsert) => {
-      console.log('Creating auction with data:', auction);
-      
-      const { data, error } = await supabase
-        .from('auctions')
-        .insert(auction)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Auction creation error:', error);
-        throw error;
-      }
-      
-      console.log('Auction created successfully:', data);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['auctions'] });
-    },
-    onError: (error) => {
-      console.error('Mutation error:', error);
     },
   });
 };
@@ -95,6 +67,17 @@ export const useUploadAuctionImage = () => {
   return useMutation({
     mutationFn: async ({ file, auctionId }: { file: File; auctionId?: string }) => {
       try {
+        // Validate file type and size
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error('Invalid file type. Only JPEG, PNG, and WebP images are allowed.');
+        }
+        
+        // Limit file size to 5MB
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error('File size must be less than 5MB.');
+        }
+
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `auction-images/${fileName}`;

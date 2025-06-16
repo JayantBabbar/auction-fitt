@@ -2,14 +2,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSecurityAudit } from '@/hooks/useSecurityAudit';
 
-// Type definition for the place_bid function response
-interface PlaceBidResponse {
-  success: boolean;
-  bid_id?: string;
-  message?: string;
-  error?: string;
-}
+// Use the secure version of place bid hook
+export { useSecurePlaceBid as usePlaceBid } from '@/hooks/useSecureBids';
 
 export const useBids = (auctionId?: string) => {
   return useQuery({
@@ -68,65 +64,36 @@ export const useAuctionWinners = () => {
 };
 
 export const useCanUserBid = () => {
+  const { mutate: logSecurityEvent } = useSecurityAudit();
+  
   return useQuery({
     queryKey: ['can-user-bid'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
+      if (!user) {
+        logSecurityEvent({
+          action: 'bid_eligibility_check_unauthenticated',
+          resourceType: 'auth',
+          success: false
+        });
+        return false;
+      }
 
       const { data, error } = await supabase.rpc('can_user_bid', {
         user_id: user.id
       });
       
-      if (error) throw error;
-      return data;
-    },
-  });
-};
-
-export const usePlaceBid = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async ({ auctionId, amount }: { auctionId: string; amount: number }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase.rpc('place_bid', {
-        p_auction_id: auctionId,
-        p_bidder_id: user.id,
-        p_amount: amount
-      });
-      
-      if (error) throw error;
-      return data as unknown as PlaceBidResponse;
-    },
-    onSuccess: (data, variables) => {
-      if (data.success) {
-        toast({
-          title: "Bid Placed Successfully!",
-          description: data.message,
+      if (error) {
+        logSecurityEvent({
+          action: 'bid_eligibility_check_failed',
+          resourceType: 'auth',
+          success: false,
+          errorMessage: error.message
         });
-        
-        // Invalidate relevant queries
-        queryClient.invalidateQueries({ queryKey: ['bids', variables.auctionId] });
-        queryClient.invalidateQueries({ queryKey: ['user-bids'] });
-        queryClient.invalidateQueries({ queryKey: ['auctions'] });
-      } else {
-        toast({
-          title: "Bid Failed",
-          description: data.error,
-          variant: "destructive"
-        });
+        throw error;
       }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Bid Failed",
-        description: error.message,
-        variant: "destructive"
-      });
+      
+      return data;
     },
   });
 };

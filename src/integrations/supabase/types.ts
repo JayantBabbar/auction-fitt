@@ -213,6 +213,45 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type: string
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       bid_details_admin: {
@@ -261,6 +300,10 @@ export type Database = {
           bid_timestamp: string
         }[]
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_highest_bidder: {
         Args: { p_auction_id: string }
         Returns: {
@@ -274,6 +317,17 @@ export type Database = {
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      log_security_event: {
+        Args: {
+          p_user_id: string
+          p_action: string
+          p_resource_type: string
+          p_resource_id?: string
+          p_success?: boolean
+          p_error_message?: string
+        }
+        Returns: undefined
       }
       place_bid: {
         Args: { p_auction_id: string; p_bidder_id: string; p_amount: number }
