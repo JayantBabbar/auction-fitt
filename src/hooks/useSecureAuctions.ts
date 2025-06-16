@@ -93,7 +93,7 @@ export const useSecureCreateAuction = () => {
         description: "Your auction has been created successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Mutation error:', error);
       toast({
         title: "Creation Failed",

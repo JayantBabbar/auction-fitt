@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import BidderHeader from './bidder/BidderHeader';
 import BidderStats from './bidder/BidderStats';
 import AuctionCard from './bidder/AuctionCard';
+import { Database } from '@/integrations/supabase/types';
 
 const BidderDashboard = () => {
   const { user, logout } = useAuth();
@@ -21,7 +22,9 @@ const BidderDashboard = () => {
   
   const [bidAmounts, setBidAmounts] = useState<{[key: string]: string}>({});
 
-  const calculateMinNextBid = (auction: any) => {
+  const calculateMinNextBid = (
+    auction: Database['public']['Tables']['auctions']['Row']
+  ) => {
     return (auction.current_bid || auction.starting_bid) + auction.bid_increment;
   };
 

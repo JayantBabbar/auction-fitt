@@ -149,7 +149,7 @@ const CreateAuction = () => {
       });
 
       navigate('/');
-    } catch (error: any) {
+    } catch (error: Error) {
       console.error('Error creating auction:', error);
       
       // Handle specific database errors

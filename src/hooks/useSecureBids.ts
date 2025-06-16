@@ -110,7 +110,7 @@ export const useSecurePlaceBid = () => {
         });
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Bid Failed",
         description: error.message,
