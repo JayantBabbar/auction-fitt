@@ -95,7 +95,7 @@ const PasswordResetForm = () => {
         logout();
       }, 2000);
 
-    } catch (error: any) {
+    } catch (error: Error) {
       console.error('Password reset error:', error);
       toast({
         title: "Password Reset Failed",
