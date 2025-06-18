@@ -14,16 +14,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
+    console.log('🔧 AuthProvider: Setting up auth state listener');
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth state changed:', event, session?.user?.email);
+        console.log('🔄 Auth state changed:', event, session?.user?.email || 'No user');
         setSession(session);
         
         if (session?.user && mounted) {
           try {
+            console.log('👤 Fetching user profile for:', session.user.email);
+            
             // Fetch user profile from profiles table
             const { data: profile, error } = await supabase
               .from('profiles')
@@ -32,9 +36,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .single();
             
             if (error) {
-              console.error('Error fetching profile:', error);
+              console.error('❌ Error fetching profile:', error);
+              console.log('🔍 Profile query details:', {
+                userId: session.user.id,
+                userEmail: session.user.email
+              });
               if (mounted) setUser(null);
             } else if (profile && mounted) {
+              console.log('✅ Profile loaded:', profile);
               setUser({
                 id: profile.id,
                 email: profile.email,
@@ -44,14 +53,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               });
             }
           } catch (error) {
-            console.error('Profile fetch error:', error);
+            console.error('🔥 Profile fetch exception:', error);
             if (mounted) setUser(null);
           }
         } else if (mounted) {
+          console.log('🚪 No session, clearing user');
           setUser(null);
         }
         
         if (mounted) {
+          console.log('⏱️ Setting loading to false');
           setIsLoading(false);
         }
       }
@@ -60,18 +71,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for existing session
     const initializeAuth = async () => {
       try {
+        console.log('🔍 Checking for existing session...');
         const { data: { session: existingSession }, error } = await supabase.auth.getSession();
         if (error) {
-          console.error('Session check error:', error);
+          console.error('❌ Session check error:', error);
         } else {
-          console.log('Initial session check:', existingSession?.user?.email || 'No session');
+          console.log('📋 Initial session result:', existingSession?.user?.email || 'No existing session');
         }
         
         if (!existingSession && mounted) {
+          console.log('⚡ No existing session, setting loading to false immediately');
           setIsLoading(false);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('🔥 Auth initialization exception:', error);
         if (mounted) {
           setIsLoading(false);
         }
@@ -81,44 +94,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
 
     return () => {
+      console.log('🧹 AuthProvider: Cleaning up');
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
+    console.log('🔐 Login attempt for:', email);
     setIsLoading(true);
     
     try {
-      console.log('Attempting login for email:', email);
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password
       });
 
       if (error) {
-        console.error('Login error details:', {
+        console.error('❌ Login error:', {
           message: error.message,
           status: error.status,
-          name: error.name
+          name: error.name,
+          details: error
         });
         
         setIsLoading(false);
         return false;
       }
 
-      console.log('Login successful for:', data.user?.email);
+      console.log('✅ Login successful for:', data.user?.email);
       return true;
     } catch (error) {
-      console.error('Login exception:', error);
+      console.error('🔥 Login exception:', error);
       setIsLoading(false);
       return false;
     }
   };
 
   const logout = async () => {
-    console.log('Logging out...');
+    console.log('👋 Logging out...');
     
     await supabase.auth.signOut();
     setUser(null);
