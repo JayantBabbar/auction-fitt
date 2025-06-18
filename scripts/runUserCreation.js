@@ -1,7 +1,7 @@
 
-const { createClient } = require('@supabase/supabase-js');
-const users = require('./users_bulk_create.json');
-require('dotenv/config');
+import { createClient } from '@supabase/supabase-js'
+import users from "./user_bulk_create.json"
+import 'dotenv/config'
 
 // Verify environment variables
 const supabaseUrl = process.env.SUPABASE_URL;

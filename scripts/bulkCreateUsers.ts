@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js'
-import users from './users_bulk_create.json'
+import users from "./user_bulk_create.json"
 import 'dotenv/config'
 
 // Verify environment variables
