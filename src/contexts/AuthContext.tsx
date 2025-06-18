@@ -16,55 +16,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
         
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         
         if (session?.user && mounted) {
-          try {
-            // Fetch user profile from profiles table
-            const { data: profile, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (error) {
-              console.error('Error fetching profile:', error);
-              // Log security event for failed profile fetch
-              await supabase.rpc('log_security_event', {
-                p_user_id: session.user.id,
-                p_action: 'profile_fetch_failed',
-                p_resource_type: 'profile',
-                p_success: false,
-                p_error_message: error.message
-              });
-              setUser(null);
-            } else if (profile && mounted) {
-              setUser({
-                id: profile.id,
-                email: profile.email,
-                role: profile.role as 'admin' | 'bidder',
-                name: profile.name,
-                passwordResetRequired: profile.password_reset_required || false
-              });
+          // Defer profile fetch to prevent deadlock
+          setTimeout(async () => {
+            try {
+              // Fetch user profile from profiles table
+              const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+              
+              if (error) {
+                console.error('Error fetching profile:', error);
+                // Log security event for failed profile fetch
+                await supabase.rpc('log_security_event', {
+                  p_user_id: session.user.id,
+                  p_action: 'profile_fetch_failed',
+                  p_resource_type: 'profile',
+                  p_success: false,
+                  p_error_message: error.message
+                });
+                if (mounted) setUser(null);
+              } else if (profile && mounted) {
+                setUser({
+                  id: profile.id,
+                  email: profile.email,
+                  role: profile.role as 'admin' | 'bidder',
+                  name: profile.name,
+                  passwordResetRequired: profile.password_reset_required || false
+                });
 
-              // Log successful login
-              await supabase.rpc('log_security_event', {
-                p_user_id: profile.id,
-                p_action: 'user_login',
-                p_resource_type: 'auth',
-                p_success: true
-              });
+                // Log successful login
+                await supabase.rpc('log_security_event', {
+                  p_user_id: profile.id,
+                  p_action: 'user_login',
+                  p_resource_type: 'auth',
+                  p_success: true
+                });
+              }
+            } catch (error) {
+              console.error('Auth context error:', error);
+              if (mounted) {
+                setUser(null);
+              }
             }
-          } catch (error) {
-            console.error('Auth context error:', error);
-            if (mounted) {
-              setUser(null);
-            }
-          }
+          }, 0);
         } else if (mounted) {
           setUser(null);
         }
