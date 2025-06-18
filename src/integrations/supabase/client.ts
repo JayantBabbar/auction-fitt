@@ -11,13 +11,13 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: true
   }
 });
 
 // Add debugging
-console.log('Supabase client initialized with URL:', SUPABASE_URL);
-console.log('API Key length:', SUPABASE_PUBLISHABLE_KEY.length);
+console.log('Supabase client initialized');
+console.log('URL:', SUPABASE_URL);
+console.log('Key starts with:', SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...');
