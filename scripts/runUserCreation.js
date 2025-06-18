@@ -1,7 +1,12 @@
 
-import { createClient } from '@supabase/supabase-js'
-import users from "./user_bulk_create.json"
-import 'dotenv/config'
+const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
+const path = require('path');
+require('dotenv/config');
+
+// Read the JSON file synchronously
+const usersFilePath = path.join(__dirname, 'user_bulk_create.json');
+const users = JSON.parse(fs.readFileSync(usersFilePath, 'utf8'));
 
 // Verify environment variables
 const supabaseUrl = process.env.SUPABASE_URL;
