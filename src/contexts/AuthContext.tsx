@@ -16,58 +16,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (!mounted) return;
         
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         
         if (session?.user && mounted) {
-          // Defer profile fetch to prevent deadlock
-          setTimeout(async () => {
-            try {
-              // Fetch user profile from profiles table
-              const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-              
-              if (error) {
-                console.error('Error fetching profile:', error);
-                // Log security event for failed profile fetch
-                await supabase.rpc('log_security_event', {
-                  p_user_id: session.user.id,
-                  p_action: 'profile_fetch_failed',
-                  p_resource_type: 'profile',
-                  p_success: false,
-                  p_error_message: error.message
-                });
-                if (mounted) setUser(null);
-              } else if (profile && mounted) {
-                setUser({
-                  id: profile.id,
-                  email: profile.email,
-                  role: profile.role as 'admin' | 'bidder',
-                  name: profile.name,
-                  passwordResetRequired: profile.password_reset_required || false
-                });
-
-                // Log successful login
-                await supabase.rpc('log_security_event', {
-                  p_user_id: profile.id,
-                  p_action: 'user_login',
-                  p_resource_type: 'auth',
-                  p_success: true
-                });
-              }
-            } catch (error) {
-              console.error('Auth context error:', error);
-              if (mounted) {
-                setUser(null);
-              }
+          try {
+            // Fetch user profile from profiles table
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (error) {
+              console.error('Error fetching profile:', error);
+              if (mounted) setUser(null);
+            } else if (profile && mounted) {
+              setUser({
+                id: profile.id,
+                email: profile.email,
+                role: profile.role as 'admin' | 'bidder',
+                name: profile.name,
+                passwordResetRequired: profile.password_reset_required || false
+              });
             }
-          }, 0);
+          } catch (error) {
+            console.error('Profile fetch error:', error);
+            if (mounted) setUser(null);
+          }
         } else if (mounted) {
           setUser(null);
         }
@@ -84,6 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session: existingSession }, error } = await supabase.auth.getSession();
         if (error) {
           console.error('Session check error:', error);
+        } else {
+          console.log('Initial session check:', existingSession?.user?.email || 'No session');
         }
         
         if (!existingSession && mounted) {
@@ -109,28 +90,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
+      console.log('Attempting login for email:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password
       });
 
       if (error) {
-        console.error('Login error:', error.message);
-        
-        // Log failed login attempt
-        await supabase.rpc('log_security_event', {
-          p_user_id: null,
-          p_action: 'login_failed',
-          p_resource_type: 'auth',
-          p_success: false,
-          p_error_message: `Failed login for email: ${email}`
+        console.error('Login error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
         });
         
         setIsLoading(false);
         return false;
       }
 
-      console.log('Login successful:', data.user?.email);
+      console.log('Login successful for:', data.user?.email);
       return true;
     } catch (error) {
       console.error('Login exception:', error);
@@ -141,16 +119,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     console.log('Logging out...');
-    
-    // Log logout event
-    if (user) {
-      await supabase.rpc('log_security_event', {
-        p_user_id: user.id,
-        p_action: 'user_logout',
-        p_resource_type: 'auth',
-        p_success: true
-      });
-    }
     
     await supabase.auth.signOut();
     setUser(null);

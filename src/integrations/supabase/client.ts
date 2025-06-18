@@ -14,5 +14,10 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
   }
 });
+
+// Add debugging
+console.log('Supabase client initialized with URL:', SUPABASE_URL);
+console.log('API Key length:', SUPABASE_PUBLISHABLE_KEY.length);
