@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/ClerkAuthContext';
 import { useCreateAuction } from '@/hooks/useAuctions';
 import { ImageUpload } from '@/components/ImageUpload';
 import { Button } from '@/components/ui/button';
