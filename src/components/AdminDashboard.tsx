@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import AdminHeader from './admin/AdminHeader';
 import AdminStats from './admin/AdminStats';
 import AdminTabs from './admin/AdminTabs';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Plus } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
@@ -70,6 +70,22 @@ const AdminDashboard = () => {
       <AdminHeader userName={user?.name || 'Admin'} onSignOut={signOut} />
       
       <div className="container mx-auto px-6 py-8">
+        {/* Create Auction Button */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-serif font-bold text-slate-900">Dashboard Overview</h1>
+            <p className="text-slate-600 mt-1">Manage your auctions and monitor performance</p>
+          </div>
+          <Button 
+            onClick={() => navigate('/create-auction')}
+            className="bg-primary hover:bg-primary/90 shadow-lg"
+            size="lg"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Auction
+          </Button>
+        </div>
+
         <AdminStats auctions={mockAuctions} />
         <AdminTabs auctions={mockAuctions} />
       </div>
