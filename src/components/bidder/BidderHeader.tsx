@@ -2,13 +2,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Gavel, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/ClerkAuthContext';
 
 interface BidderHeaderProps {
   userName?: string;
-  onLogout: () => void;
 }
 
-const BidderHeader = ({ userName, onLogout }: BidderHeaderProps) => {
+const BidderHeader = ({ userName }: BidderHeaderProps) => {
+  const { signOut } = useAuth();
+
   return (
     <header className="border-b bg-card/50 backdrop-blur">
       <div className="container mx-auto px-4 py-4">
@@ -22,7 +24,7 @@ const BidderHeader = ({ userName, onLogout }: BidderHeaderProps) => {
               <p className="text-muted-foreground">Welcome back, {userName}</p>
             </div>
           </div>
-          <Button variant="outline" onClick={onLogout} className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => signOut()} className="flex items-center gap-2">
             <LogOut className="h-4 w-4" />
             Sign Out
           </Button>

@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import LoginForm from '@/components/LoginForm';
+import { SignedIn, SignedOut } from '@clerk/clerk-react';
+import { useAuth } from '@/contexts/ClerkAuthContext';
+import LoginForm from '@/components/ClerkLoginForm';
 import AdminDashboard from '@/components/AdminDashboard';
 import BidderDashboard from '@/components/BidderDashboard';
-import PasswordResetForm from '@/components/PasswordResetForm';
 
 const Index = () => {
   const { user, isLoading } = useAuth();
@@ -20,16 +20,16 @@ const Index = () => {
     );
   }
 
-  if (!user) {
-    return <LoginForm />;
-  }
-
-  // Check if user needs to reset password
-  if (user.passwordResetRequired) {
-    return <PasswordResetForm />;
-  }
-
-  return user.role === 'admin' ? <AdminDashboard /> : <BidderDashboard />;
+  return (
+    <>
+      <SignedOut>
+        <LoginForm />
+      </SignedOut>
+      <SignedIn>
+        {user?.role === 'admin' ? <AdminDashboard /> : <BidderDashboard />}
+      </SignedIn>
+    </>
+  );
 };
 
 export default Index;
