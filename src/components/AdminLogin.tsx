@@ -20,10 +20,10 @@ const AdminLogin = () => {
 
     setIsUpdating(true);
     try {
-      // Update user's public metadata with the selected role
+      // Update user's public metadata with the selected role using the correct method
       await user.update({
-        publicMetadata: {
-          ...user.publicMetadata,
+        unsafeMetadata: {
+          ...user.unsafeMetadata,
           role: selectedRole
         }
       });
@@ -50,7 +50,7 @@ const AdminLogin = () => {
     }
   };
 
-  const currentRole = user?.publicMetadata?.role as string || 'bidder';
+  const currentRole = user?.unsafeMetadata?.role as string || 'bidder';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">

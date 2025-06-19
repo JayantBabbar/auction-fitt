@@ -26,8 +26,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     id: clerkUser.id,
     email: clerkUser.emailAddresses[0]?.emailAddress || '',
     name: clerkUser.fullName || clerkUser.firstName || 'User',
-    // For now, we'll default to 'bidder'. You can add role logic later
-    role: clerkUser.publicMetadata?.role as 'admin' | 'bidder' || 'bidder'
+    // Read role from unsafeMetadata instead of publicMetadata
+    role: clerkUser.unsafeMetadata?.role as 'admin' | 'bidder' || 'bidder'
   } : null;
 
   return (
