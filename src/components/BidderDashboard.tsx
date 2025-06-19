@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/ClerkAuthContext';
 import { useAuctions } from '@/hooks/useAuctions';
 import { useUserBids, useCanUserBid, usePlaceBid } from '@/hooks/useBids';
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +8,7 @@ import BidderStats from './bidder/BidderStats';
 import AuctionCard from './bidder/AuctionCard';
 
 const BidderDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const { data: auctions = [], isLoading } = useAuctions();
   const { data: userBids = [] } = useUserBids();
@@ -95,7 +94,7 @@ const BidderDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <BidderHeader userName={user?.name} onLogout={logout} />
+      <BidderHeader userName={user?.name} />
 
       <div className="container mx-auto px-4 py-8">
         {!canBid && (

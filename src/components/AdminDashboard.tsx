@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/ClerkAuthContext';
 import { useAuctions, useDeleteAuction, useUpdateAuction } from '@/hooks/useAuctions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,7 @@ import {
 } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: auctions, isLoading, error } = useAuctions();
@@ -162,7 +161,7 @@ const AdminDashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={logout} className="border-slate-200 text-slate-600 hover:bg-slate-50">
+              <Button variant="outline" onClick={signOut} className="border-slate-200 text-slate-600 hover:bg-slate-50">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
