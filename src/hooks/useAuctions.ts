@@ -1,10 +1,28 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
 
-type Auction = Database['public']['Tables']['auctions']['Row'];
-type AuctionUpdate = Database['public']['Tables']['auctions']['Update'];
+// Mock auction type
+type Auction = {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  starting_bid: number;
+  current_bid: number;
+  reserve_price?: number | null;
+  bid_increment: number;
+  condition: string;
+  start_time: string;
+  end_time: string;
+  auction_duration: number;
+  status: string;
+  image_urls: string[];
+  created_by: string;
+  created_at: string;
+  bid_count: number;
+};
+
+type AuctionUpdate = Partial<Auction>;
 
 // Use the secure version of create auction hook
 export { useSecureCreateAuction as useCreateAuction } from '@/hooks/useSecureAuctions';
@@ -13,13 +31,30 @@ export const useAuctions = () => {
   return useQuery({
     queryKey: ['auctions'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('auctions')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Mock auctions data since we're not using Supabase
+      const mockAuctions: Auction[] = [
+        {
+          id: '1',
+          title: 'Sample Auction 1',
+          description: 'A sample auction item',
+          category: 'Electronics',
+          starting_bid: 1000,
+          current_bid: 1500,
+          bid_increment: 50,
+          condition: 'excellent',
+          start_time: new Date().toISOString(),
+          end_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          auction_duration: 1,
+          status: 'active',
+          image_urls: ['https://images.unsplash.com/photo-1488590528505-98d2b5aba04b'],
+          created_by: 'user_1',
+          created_at: new Date().toISOString(),
+          bid_count: 5
+        }
+      ];
       
-      if (error) throw error;
-      return data;
+      console.log('Returning mock auctions:', mockAuctions);
+      return mockAuctions;
     },
   });
 };
@@ -29,15 +64,17 @@ export const useUpdateAuction = () => {
   
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: AuctionUpdate }) => {
-      const { data, error } = await supabase
-        .from('auctions')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      console.log('Updating auction:', id, updates);
       
-      if (error) throw error;
-      return data;
+      // Mock update - in real implementation this would call your API
+      const updatedAuction = {
+        id,
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return updatedAuction;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auctions'] });
@@ -50,12 +87,10 @@ export const useDeleteAuction = () => {
   
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('auctions')
-        .delete()
-        .eq('id', id);
+      console.log('Deleting auction:', id);
       
-      if (error) throw error;
+      // Mock deletion - in real implementation this would call your API
+      await new Promise(resolve => setTimeout(resolve, 500));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auctions'] });
@@ -78,39 +113,14 @@ export const useUploadAuctionImage = () => {
           throw new Error('File size must be less than 5MB.');
         }
 
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `auction-images/${fileName}`;
+        console.log('Mock image upload for file:', file.name);
+        
+        // Mock image upload - return a placeholder URL
+        const mockUrl = `https://images.unsplash.com/photo-${Date.now()}`;
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const { error: uploadError } = await supabase.storage
-          .from('auction-images')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          throw uploadError;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('auction-images')
-          .getPublicUrl(filePath);
-
-        if (auctionId) {
-          const { error: dbError } = await supabase
-            .from('auction_images')
-            .insert({
-              auction_id: auctionId,
-              image_url: publicUrl,
-              is_primary: false
-            });
-
-          if (dbError) {
-            console.error('Database error:', dbError);
-            throw dbError;
-          }
-        }
-
-        return { url: publicUrl, path: filePath };
+        return { url: mockUrl, path: `mock/${file.name}` };
       } catch (error) {
         console.error('Image upload failed:', error);
         throw error;
