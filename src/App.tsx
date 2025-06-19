@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/ClerkAuthContext";
 import Index from "./pages/Index";
 import CreateAuction from "./pages/CreateAuction";
+import RoleAssignment from "./pages/RoleAssignment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/create-auction" element={<CreateAuction />} />
+            <Route path="/admin-setup" element={<RoleAssignment />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
