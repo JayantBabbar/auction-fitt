@@ -2,7 +2,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/ClerkAuthContext';
-import { useAuctions } from '@/hooks/useAuctions';
 import { Button } from '@/components/ui/button';
 import AdminHeader from './admin/AdminHeader';
 import AdminStats from './admin/AdminStats';
@@ -12,54 +11,10 @@ import { Loader2, AlertCircle } from 'lucide-react';
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { data: auctions, isLoading, error } = useAuctions();
 
   // Add debugging logs
   console.log('AdminDashboard - Current user:', user);
   console.log('AdminDashboard - User role:', user?.role);
-  console.log('AdminDashboard - Auctions loading:', isLoading);
-  console.log('AdminDashboard - Auctions error:', error);
-  console.log('AdminDashboard - Auctions data:', auctions);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50/30 flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading dashboard...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    console.error('Dashboard error details:', error);
-    return (
-      <div className="min-h-screen bg-slate-50/30 flex items-center justify-center">
-        <div className="text-center max-w-md p-6">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Error loading dashboard</h2>
-          <p className="text-slate-600 mb-4">
-            {error?.message || 'An unexpected error occurred'}
-          </p>
-          <div className="space-y-2">
-            <Button onClick={() => window.location.reload()} variant="outline">
-              Refresh Page
-            </Button>
-            <Button onClick={() => navigate('/admin-setup')} variant="secondary">
-              Go to Role Setup
-            </Button>
-          </div>
-          <details className="mt-4 text-left">
-            <summary className="cursor-pointer text-sm text-slate-500">Error Details</summary>
-            <pre className="mt-2 text-xs bg-slate-100 p-2 rounded overflow-auto">
-              {JSON.stringify(error, null, 2)}
-            </pre>
-          </details>
-        </div>
-      </div>
-    );
-  }
 
   // Check if user has admin role
   if (user?.role !== 'admin') {
@@ -82,13 +37,41 @@ const AdminDashboard = () => {
     );
   }
 
+  // Mock auction data for demo purposes since we're not using Supabase
+  const mockAuctions = [
+    {
+      id: '1',
+      title: 'Sample Auction 1',
+      status: 'active',
+      current_bid: 1500,
+      starting_bid: 1000,
+      end_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '2',
+      title: 'Sample Auction 2',
+      status: 'completed',
+      current_bid: 2500,
+      starting_bid: 2000,
+      end_time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '3',
+      title: 'Sample Auction 3',
+      status: 'active',
+      current_bid: 750,
+      starting_bid: 500,
+      end_time: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50/30">
       <AdminHeader userName={user?.name || 'Admin'} onSignOut={signOut} />
       
       <div className="container mx-auto px-6 py-8">
-        <AdminStats auctions={auctions} />
-        <AdminTabs auctions={auctions} />
+        <AdminStats auctions={mockAuctions} />
+        <AdminTabs auctions={mockAuctions} />
       </div>
     </div>
   );

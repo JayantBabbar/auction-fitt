@@ -13,11 +13,16 @@ interface AdminStatsProps {
   auctions?: any[];
 }
 
-const AdminStats = ({ auctions }: AdminStatsProps) => {
+const AdminStats = ({ auctions = [] }: AdminStatsProps) => {
+  const activeAuctions = auctions.filter(a => a.status === 'active').length;
+  const totalRevenue = auctions.reduce((sum, auction) => {
+    return sum + (auction.current_bid || 0);
+  }, 0);
+
   const stats = [
     {
       title: 'Active Auctions',
-      value: auctions?.filter(a => a.status === 'active').length || 0,
+      value: activeAuctions,
       icon: Gavel,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
@@ -26,7 +31,7 @@ const AdminStats = ({ auctions }: AdminStatsProps) => {
     },
     {
       title: 'Total Auctions',
-      value: auctions?.length || 0,
+      value: auctions.length,
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -34,8 +39,8 @@ const AdminStats = ({ auctions }: AdminStatsProps) => {
       changeType: 'positive'
     },
     {
-      title: 'Revenue Today',
-      value: '₹67,500',
+      title: 'Total Revenue',
+      value: `₹${totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       color: 'text-auction-gold',
       bgColor: 'bg-yellow-50',
@@ -43,8 +48,8 @@ const AdminStats = ({ auctions }: AdminStatsProps) => {
       changeType: 'positive'
     },
     {
-      title: 'Lifetime Revenue',
-      value: '₹2.4M',
+      title: 'Avg Bid Value',
+      value: `₹${auctions.length > 0 ? Math.round(totalRevenue / auctions.length).toLocaleString() : '0'}`,
       icon: TrendingUp,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
