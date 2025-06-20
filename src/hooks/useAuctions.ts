@@ -1,4 +1,5 @@
 
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Mock auction type
@@ -15,7 +16,7 @@ type Auction = {
   start_time: string;
   end_time: string;
   auction_duration: number;
-  status: string;
+  status: 'active' | 'draft' | 'upcoming' | 'ended' | 'cancelled';
   image_urls: string[];
   created_by: string;
   created_at: string;
