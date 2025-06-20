@@ -29,13 +29,9 @@ export async function createUser(req: Request): Promise<Response> {
       );
     }
 
-    // Initialize Clerk client with the provided secret key
-    const clerk = clerkClient({
-      secretKey: secretKey,
-    });
-
-    // Create the user
-    const newUser = await clerk.users.createUser({
+    // Create the user using the clerkClient directly
+    // Note: You need to set CLERK_SECRET_KEY environment variable on your server
+    const newUser = await clerkClient.users.createUser({
       emailAddress: user.emailAddress,
       password: user.password,
       firstName: user.firstName,
