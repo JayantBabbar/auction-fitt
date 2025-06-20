@@ -19,6 +19,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 });
 
 // Add debugging
-console.log('Supabase client initialized');
+console.log('Supabase client initialized with new key');
 console.log('URL:', SUPABASE_URL);
-console.log('Key starts with:', SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...');
+console.log('Key starts with:', SUPABASE_PUBLISHABLE_KEY.substring(0, 30) + '...');
