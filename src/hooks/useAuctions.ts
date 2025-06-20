@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Mock auction type
@@ -8,7 +9,7 @@ type Auction = {
   category: string;
   starting_bid: number;
   current_bid: number;
-  reserve_price?: number | null;
+  reserve_price: number | null;
   bid_increment: number;
   condition: 'excellent' | 'very_good' | 'good' | 'fair' | 'poor';
   start_time: string;
@@ -44,6 +45,7 @@ export const useAuctions = () => {
           category: 'Electronics',
           starting_bid: 1000,
           current_bid: 1500,
+          reserve_price: 2000,
           bid_increment: 50,
           condition: 'excellent',
           start_time: new Date().toISOString(),
