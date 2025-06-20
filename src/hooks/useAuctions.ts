@@ -11,7 +11,7 @@ type Auction = {
   current_bid: number;
   reserve_price?: number | null;
   bid_increment: number;
-  condition: string;
+  condition: 'excellent' | 'very_good' | 'good' | 'fair' | 'poor';
   start_time: string;
   end_time: string;
   auction_duration: number;
