@@ -16,26 +16,40 @@ export const useBulkUserCreation = () => {
 
   const createUserWithSupabase = async (user: User): Promise<boolean> => {
     try {
-      // Create user in Supabase Auth
+      console.log(`Attempting to create user: ${user.email}`);
+      
+      // Create user in Supabase Auth using the service role key
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: user.email.trim().toLowerCase(),
         password: user.password,
         email_confirm: true,
         user_metadata: {
-          name: user.name
+          name: user.name,
+          role: user.role
         }
       });
 
       if (authError) {
-        console.error('Auth error:', authError);
+        console.error(`Auth error for ${user.email}:`, authError);
+        
+        // Check for specific error types
+        if (authError.message?.includes('User already registered')) {
+          console.log(`User ${user.email} already exists, skipping...`);
+          return true; // Consider existing users as success
+        }
+        
         return false;
       }
 
-      // The profile will be created automatically by the trigger
-      console.log(`✅ Created ${user.email} with ID: ${authData.user?.id}`);
+      if (!authData.user) {
+        console.error(`No user data returned for ${user.email}`);
+        return false;
+      }
+
+      console.log(`✅ Successfully created ${user.email} with ID: ${authData.user.id}`);
       return true;
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error(`Unexpected error creating user ${user.email}:`, error);
       return false;
     }
   };
@@ -47,33 +61,62 @@ export const useBulkUserCreation = () => {
         description: "Please parse the CSV data first",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
+    console.log(`Starting bulk creation of ${users.length} users...`);
     setIsCreating(true);
+    
     let successCount = 0;
     let errorCount = 0;
+    const errors: string[] = [];
 
-    for (const user of users) {
-      const success = await createUserWithSupabase(user);
-      if (success) {
-        successCount++;
-      } else {
-        errorCount++;
+    try {
+      for (let i = 0; i < users.length; i++) {
+        const user = users[i];
+        console.log(`Processing user ${i + 1}/${users.length}: ${user.email}`);
+        
+        const success = await createUserWithSupabase(user);
+        if (success) {
+          successCount++;
+        } else {
+          errorCount++;
+          errors.push(`Failed to create: ${user.email}`);
+        }
+        
+        // Small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
-      
-      // Small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 200));
+
+      console.log(`Bulk creation completed. Success: ${successCount}, Errors: ${errorCount}`);
+
+      // Show detailed results
+      if (errorCount > 0) {
+        console.error('Failed users:', errors.slice(0, 5)); // Log first 5 errors
+        toast({
+          title: "Bulk Creation Completed with Errors",
+          description: `Created ${successCount} users successfully. ${errorCount} failed. Check console for details.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Bulk Creation Successful",
+          description: `Successfully created all ${successCount} users!`,
+        });
+      }
+
+      return successCount > 0;
+    } catch (error) {
+      console.error('Bulk creation process failed:', error);
+      toast({
+        title: "Bulk Creation Failed",
+        description: "An unexpected error occurred during bulk creation. Check console for details.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsCreating(false);
     }
-
-    toast({
-      title: "Bulk Creation Complete",
-      description: `Created ${successCount} users successfully. ${errorCount} failed.`,
-      variant: errorCount > 0 ? "destructive" : "default",
-    });
-
-    setIsCreating(false);
-    return successCount > 0;
   };
 
   return {

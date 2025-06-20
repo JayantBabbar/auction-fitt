@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Download } from 'lucide-react';
+import { Users, Download, FileText } from 'lucide-react';
 
 interface User {
   name: string;
@@ -33,38 +33,91 @@ const CsvUserManager: React.FC<CsvUserManagerProps> = ({
   const [defaultPassword, setDefaultPassword] = useState('AuctionUser2024!');
 
   const parseCsvText = () => {
-    const lines = csvText.trim().split('\n');
+    if (!csvText.trim()) {
+      toast({
+        title: "No Data to Parse",
+        description: "Please enter CSV data first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('Parsing CSV with length:', csvText.length);
+    
+    const lines = csvText.trim().split('\n').filter(line => line.trim());
     const parsedUsers: User[] = [];
+    let skippedLines = 0;
     
     lines.forEach((line, index) => {
-      const [name, email, password, role] = line.split(',').map(item => item.trim());
+      const trimmedLine = line.trim();
+      if (!trimmedLine) {
+        skippedLines++;
+        return;
+      }
+
+      // Split by comma and clean up each field
+      const parts = trimmedLine.split(',').map(item => item.trim());
+      const [name, email, password, role] = parts;
       
       if (name && email) {
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          console.warn(`Invalid email format on line ${index + 1}: ${email}`);
+          skippedLines++;
+          return;
+        }
+
         parsedUsers.push({
-          name,
-          email,
+          name: name,
+          email: email.toLowerCase(),
           password: password || defaultPassword,
           role: (role as 'admin' | 'bidder') || defaultRole
         });
+      } else {
+        console.warn(`Incomplete data on line ${index + 1}: missing name or email`);
+        skippedLines++;
       }
     });
     
+    console.log(`Parsed ${parsedUsers.length} users, skipped ${skippedLines} lines`);
+    
     setUsers(parsedUsers);
     toast({
-      title: "CSV Parsed",
-      description: `Found ${parsedUsers.length} users to create`,
+      title: "CSV Parsed Successfully",
+      description: `Found ${parsedUsers.length} valid users to create${skippedLines > 0 ? ` (${skippedLines} lines skipped)` : ''}`,
     });
   };
 
   const generateSampleUsers = () => {
     const sampleData = [];
-    for (let i = 1; i <= 80; i++) {
-      sampleData.push(`User ${i},user${i}@yourcompany.com,${defaultPassword},bidder`);
+    for (let i = 1; i <= 10; i++) {
+      sampleData.push(`Sample User ${i},sampleuser${i}@fitt-iitd.in,${defaultPassword},bidder`);
     }
     setCsvText(sampleData.join('\n'));
     toast({
       title: "Sample Data Generated",
-      description: "Generated 80 sample users. Parse the CSV and then create users.",
+      description: "Generated 10 sample users. You can modify this data before parsing.",
+    });
+  };
+
+  const loadExistingUsers = () => {
+    // Load the actual user data from the uploaded list
+    const existingUsersData = `Abhishek,Abhishek@fitt-iitd.in,${defaultPassword},bidder
+Adarsh Madhu,adarshmadhu@fitt-iitd.in,${defaultPassword},bidder
+Aishwarya Shah,aishwaryashah@fitt-iitd.in,${defaultPassword},bidder
+Akash Rana,Akashrana@fitt-iitd.in,${defaultPassword},bidder
+Akash Shiroya,akashshiroya@fitt-iitd.in,${defaultPassword},bidder
+Akshit Gupta,akshitgupta@fitt-iitd.in,${defaultPassword},bidder
+Ankit Saxena,ankit@fitt-iitd.in,${defaultPassword},bidder
+Anmol Chaturvedi,anmolchaturvedi@fitt-iitd.in,${defaultPassword},bidder
+Anubhav Sen,anubhavsen@fitt-iitd.in,${defaultPassword},bidder
+Arabinda Mitra,arabindamitra@fitt-iitd.in,${defaultPassword},bidder`;
+    
+    setCsvText(existingUsersData);
+    toast({
+      title: "User Data Loaded",
+      description: "Loaded existing user data. Parse the CSV to create users.",
     });
   };
 
@@ -81,14 +134,18 @@ const CsvUserManager: React.FC<CsvUserManagerProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 flex-wrap">
         <Button variant="outline" onClick={downloadTemplate}>
           <Download className="h-4 w-4 mr-2" />
           Download Template
         </Button>
         <Button variant="outline" onClick={generateSampleUsers}>
           <Users className="h-4 w-4 mr-2" />
-          Generate 80 Sample Users
+          Generate Sample Users
+        </Button>
+        <Button variant="outline" onClick={loadExistingUsers}>
+          <FileText className="h-4 w-4 mr-2" />
+          Load Existing User List
         </Button>
       </div>
 
@@ -127,12 +184,17 @@ const CsvUserManager: React.FC<CsvUserManagerProps> = ({
           className="font-mono text-sm"
         />
         <p className="text-sm text-muted-foreground mt-1">
-          Format: name,email,password,role (one user per line). Use the "Generate 80 Sample Users" button to get started.
+          Format: name,email,password,role (one user per line). Use the buttons above to get started.
         </p>
       </div>
 
-      <Button variant="outline" onClick={parseCsvText}>
-        Parse CSV ({csvText.trim().split('\n').filter(line => line.trim()).length} lines)
+      <Button 
+        variant="outline" 
+        onClick={parseCsvText}
+        disabled={!csvText.trim()}
+        className="w-full"
+      >
+        Parse CSV Data ({csvText.trim().split('\n').filter(line => line.trim()).length} lines)
       </Button>
     </div>
   );
