@@ -2,14 +2,14 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Gavel, LogOut } from 'lucide-react';
-import { useAuth } from '@/contexts/ClerkAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface BidderHeaderProps {
   userName?: string;
 }
 
 const BidderHeader = ({ userName }: BidderHeaderProps) => {
-  const { signOut } = useAuth();
+  const { signOut } = useSupabaseAuth();
 
   return (
     <header className="border-b bg-card/50 backdrop-blur">
