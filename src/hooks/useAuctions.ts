@@ -19,7 +19,12 @@ type Auction = {
   image_urls: string[];
   created_by: string;
   created_at: string;
+  updated_at: string;
   bid_count: number;
+  bidder_count: number;
+  dimensions?: string | null;
+  provenance?: string | null;
+  weight?: string | null;
 };
 
 type AuctionUpdate = Partial<Auction>;
@@ -49,7 +54,12 @@ export const useAuctions = () => {
           image_urls: ['https://images.unsplash.com/photo-1488590528505-98d2b5aba04b'],
           created_by: 'user_1',
           created_at: new Date().toISOString(),
-          bid_count: 5
+          updated_at: new Date().toISOString(),
+          bid_count: 5,
+          bidder_count: 3,
+          dimensions: '15" x 10" x 1"',
+          provenance: 'Original manufacturer',
+          weight: '2.5 kg'
         }
       ];
       
