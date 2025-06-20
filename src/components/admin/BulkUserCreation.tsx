@@ -24,6 +24,43 @@ const BulkUserCreation = () => {
   const [csvText, setCsvText] = useState('');
   const [defaultRole, setDefaultRole] = useState<'admin' | 'bidder'>('bidder');
   const [defaultPassword, setDefaultPassword] = useState('AuctionUser2024!');
+  const [secretKey, setSecretKey] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [showSecretDialog, setShowSecretDialog] = useState(false);
+
+  const createUserWithClerk = async (user: User): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          secretKey,
+          user: {
+            emailAddress: [user.email],
+            password: user.password,
+            firstName: user.name.split(' ')[0] || user.name,
+            lastName: user.name.split(' ').slice(1).join(' ') || '',
+            unsafeMetadata: {
+              role: user.role
+            }
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('API error:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      return false;
+    }
+  };
 
   const parseCsvText = () => {
     const lines = csvText.trim().split('\n');
@@ -57,40 +94,56 @@ const BulkUserCreation = () => {
     setCsvText(sampleData.join('\n'));
     toast({
       title: "Sample Data Generated",
-      description: "Generated 80 sample users. Use the export feature to create them.",
+      description: "Generated 80 sample users. Parse the CSV and then create users.",
     });
   };
 
-  const downloadCsvForClerk = () => {
+  const handleBulkUserCreation = async () => {
+    if (!secretKey.startsWith('sk_')) {
+      toast({
+        title: "Invalid Secret Key",
+        description: "Please enter a valid Clerk secret key (starts with 'sk_')",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (bulkUsers.length === 0) {
       toast({
-        title: "No Users to Export",
+        title: "No Users to Create",
         description: "Please parse the CSV data first",
         variant: "destructive",
       });
       return;
     }
 
-    const csvHeader = "Email,First Name,Last Name,Password,Role\n";
-    const csvContent = bulkUsers.map(user => {
-      const [firstName, ...lastNameParts] = user.name.split(' ');
-      const lastName = lastNameParts.join(' ') || '';
-      return `${user.email},"${firstName}","${lastName}",${user.password},${user.role}`;
-    }).join('\n');
-    
-    const fullCsv = csvHeader + csvContent;
-    const blob = new Blob([fullCsv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'clerk_bulk_users.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+    setIsCreating(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const user of bulkUsers) {
+      const success = await createUserWithClerk(user);
+      if (success) {
+        successCount++;
+      } else {
+        errorCount++;
+      }
+      
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
 
     toast({
-      title: "CSV Downloaded",
-      description: "Import this file in your Clerk Dashboard under Users > Import users",
+      title: "Bulk Creation Complete",
+      description: `Created ${successCount} users successfully. ${errorCount} failed.`,
+      variant: errorCount > 0 ? "destructive" : "default",
     });
+
+    if (successCount > 0) {
+      setBulkUsers([]);
+      setCsvText('');
+    }
+    setIsCreating(false);
   };
 
   const downloadTemplate = () => {
@@ -113,19 +166,56 @@ const BulkUserCreation = () => {
             Bulk User Creation
           </CardTitle>
           <CardDescription>
-            Create multiple users at once. Due to browser security restrictions, users must be created through Clerk Dashboard.
+            Create multiple users at once using Clerk's Backend SDK
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Alert className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
+            <Key className="h-4 w-4" />
             <AlertDescription>
-              <strong>Important:</strong> Direct API calls to Clerk are blocked by browser security. 
-              Use the export feature below to generate a CSV file that can be imported directly in your Clerk Dashboard.
+              <strong>Backend Integration Required:</strong> 
+              This feature requires a backend API endpoint to use Clerk's Backend SDK securely.
+              You'll need to implement the `/api/create-user` endpoint on your server.
             </AlertDescription>
           </Alert>
 
           <div className="space-y-4">
+            <Dialog open={showSecretDialog} onOpenChange={setShowSecretDialog}>
+              <DialogTrigger asChild>
+                <Button className="w-full mb-4">
+                  <Key className="h-4 w-4 mr-2" />
+                  Setup Clerk Secret Key
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Enter Clerk Secret Key</DialogTitle>
+                  <DialogDescription>
+                    Your Clerk secret key (starts with 'sk_') for creating users
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="secret-key">Secret Key</Label>
+                    <Input
+                      id="secret-key"
+                      type="password"
+                      placeholder="sk_..."
+                      value={secretKey}
+                      onChange={(e) => setSecretKey(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    onClick={() => setShowSecretDialog(false)}
+                    disabled={!secretKey}
+                    className="w-full"
+                  >
+                    Save Secret Key
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             <div className="flex gap-2 mb-4">
               <Button variant="outline" onClick={downloadTemplate}>
                 <Download className="h-4 w-4 mr-2" />
@@ -181,18 +271,22 @@ const BulkUserCreation = () => {
                 Parse CSV ({csvText.trim().split('\n').filter(line => line.trim()).length} lines)
               </Button>
               <Button 
-                onClick={downloadCsvForClerk}
-                disabled={bulkUsers.length === 0}
+                onClick={handleBulkUserCreation}
+                disabled={isCreating || bulkUsers.length === 0 || !secretKey}
                 className="flex-1"
               >
-                <Download className="h-4 w-4 mr-2" />
-                Export for Clerk Import ({bulkUsers.length} users)
+                {isCreating ? 'Creating Users...' : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Create {bulkUsers.length} Users
+                  </>
+                )}
               </Button>
             </div>
 
             {bulkUsers.length > 0 && (
               <div className="border rounded-md p-4">
-                <h4 className="font-medium mb-2">Users to Export ({bulkUsers.length})</h4>
+                <h4 className="font-medium mb-2">Users to Create ({bulkUsers.length})</h4>
                 <div className="max-h-40 overflow-y-auto">
                   {bulkUsers.slice(0, 10).map((user, index) => (
                     <div key={index} className="text-sm py-1 border-b last:border-b-0">
@@ -211,16 +305,17 @@ const BulkUserCreation = () => {
             <div className="bg-slate-50 p-4 rounded-lg">
               <h4 className="font-medium mb-2 flex items-center gap-2">
                 <ExternalLink className="h-4 w-4" />
-                How to Import Users in Clerk Dashboard:
+                Backend Implementation Required:
               </h4>
-              <ol className="text-sm space-y-1 text-muted-foreground">
-                <li>1. Export your users using the button above</li>
-                <li>2. Go to your Clerk Dashboard → Users section</li>
-                <li>3. Click "Import users" button</li>
-                <li>4. Upload the downloaded CSV file</li>
-                <li>5. Review and confirm the import</li>
-                <li>6. Users will be created with the specified roles in metadata</li>
-              </ol>
+              <div className="text-sm space-y-2 text-muted-foreground">
+                <p>You need to create an API endpoint at <code>/api/create-user</code> that:</p>
+                <ol className="list-decimal list-inside space-y-1 ml-2">
+                  <li>Uses Clerk's Backend SDK: <code>npm install @clerk/clerk-sdk-node</code></li>
+                  <li>Calls <code>clerkClient.users.createUser()</code> with the user data</li>
+                  <li>Handles the secret key securely on the server side</li>
+                  <li>Returns success/error status to the frontend</li>
+                </ol>
+              </div>
             </div>
           </div>
         </CardContent>
