@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/ClerkAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import AdminHeader from './admin/AdminHeader';
 import AdminStats from './admin/AdminStats';
@@ -9,15 +9,15 @@ import AdminTabs from './admin/AdminTabs';
 import { Loader2, AlertCircle, Plus } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { profile, signOut } = useSupabaseAuth();
   const navigate = useNavigate();
 
   // Add debugging logs
-  console.log('AdminDashboard - Current user:', user);
-  console.log('AdminDashboard - User role:', user?.role);
+  console.log('AdminDashboard - Current profile:', profile);
+  console.log('AdminDashboard - User role:', profile?.role);
 
   // Check if user has admin role
-  if (user?.role !== 'admin') {
+  if (profile?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-slate-50/30 flex items-center justify-center">
         <div className="text-center max-w-md p-6">
@@ -27,7 +27,7 @@ const AdminDashboard = () => {
             You need admin privileges to access this dashboard.
           </p>
           <p className="text-sm text-slate-500 mb-4">
-            Current role: {user?.role || 'No role assigned'}
+            Current role: {profile?.role || 'No role assigned'}
           </p>
           <Button onClick={() => navigate('/admin-setup')}>
             Set Up Admin Role
@@ -67,7 +67,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/30">
-      <AdminHeader userName={user?.name || 'Admin'} onSignOut={signOut} />
+      <AdminHeader userName={profile?.name || 'Admin'} onSignOut={signOut} />
       
       <div className="container mx-auto px-6 py-8">
         {/* Create Auction Button */}

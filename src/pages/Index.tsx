@@ -1,13 +1,12 @@
 
 import React from 'react';
-import { SignedIn, SignedOut } from '@clerk/clerk-react';
-import { useAuth } from '@/contexts/ClerkAuthContext';
-import LoginForm from '@/components/ClerkLoginForm';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import SupabaseLoginForm from '@/components/SupabaseLoginForm';
 import AdminDashboard from '@/components/AdminDashboard';
 import BidderDashboard from '@/components/BidderDashboard';
 
 const Index = () => {
-  const { user, isLoading } = useAuth();
+  const { user, profile, isLoading } = useSupabaseAuth();
 
   if (isLoading) {
     return (
@@ -20,16 +19,13 @@ const Index = () => {
     );
   }
 
-  return (
-    <>
-      <SignedOut>
-        <LoginForm />
-      </SignedOut>
-      <SignedIn>
-        {user?.role === 'admin' ? <AdminDashboard /> : <BidderDashboard />}
-      </SignedIn>
-    </>
-  );
+  // Show login form if not authenticated
+  if (!user || !profile) {
+    return <SupabaseLoginForm />;
+  }
+
+  // Show appropriate dashboard based on role
+  return profile.role === 'admin' ? <AdminDashboard /> : <BidderDashboard />;
 };
 
 export default Index;
