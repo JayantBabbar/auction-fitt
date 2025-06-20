@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Shield, User, Crown, Settings } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import UserCreation from '@/components/admin/UserCreation';
+import BulkUserCreation from '@/components/admin/BulkUserCreation';
 
 const AdminLogin = () => {
   const { user } = useUser();
@@ -60,7 +60,7 @@ const AdminLogin = () => {
         <Tabs defaultValue="role-setup" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="role-setup">Role Setup</TabsTrigger>
-            <TabsTrigger value="user-management">User Management</TabsTrigger>
+            <TabsTrigger value="bulk-users">Bulk User Creation</TabsTrigger>
           </TabsList>
           
           <TabsContent value="role-setup">
@@ -136,8 +136,8 @@ const AdminLogin = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="user-management">
-            <UserCreation />
+          <TabsContent value="bulk-users">
+            <BulkUserCreation />
           </TabsContent>
         </Tabs>
       </div>

@@ -1,13 +1,10 @@
 
 import React from 'react';
-import { SignIn, SignUp } from '@clerk/clerk-react';
+import { SignIn } from '@clerk/clerk-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Gavel } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 const ClerkLoginForm = () => {
-  const [isSignUp, setIsSignUp] = React.useState(false);
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="w-full max-w-md">
@@ -28,43 +25,22 @@ const ClerkLoginForm = () => {
         <Card className="shadow-lg border-0 bg-card/80 backdrop-blur">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
+              Sign In
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center mb-4">
-              {isSignUp ? (
-                <SignUp 
-                  appearance={{
-                    elements: {
-                      rootBox: "mx-auto",
-                      card: "shadow-none border-0 bg-transparent"
-                    }
-                  }}
-                />
-              ) : (
-                <SignIn 
-                  appearance={{
-                    elements: {
-                      rootBox: "mx-auto",
-                      card: "shadow-none border-0 bg-transparent"
-                    }
-                  }}
-                />
-              )}
-            </div>
-            
-            <div className="text-center mt-4">
-              <Button
-                variant="ghost"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm"
-              >
-                {isSignUp 
-                  ? "Already have an account? Sign in" 
-                  : "Don't have an account? Sign up"
-                }
-              </Button>
+            <div className="flex justify-center">
+              <SignIn 
+                appearance={{
+                  elements: {
+                    rootBox: "mx-auto",
+                    card: "shadow-none border-0 bg-transparent",
+                    formButtonPrimary: "bg-primary hover:bg-primary/90",
+                    footerAction: "hidden" // Hide the signup link
+                  }
+                }}
+                signUpUrl={undefined} // Disable signup completely
+              />
             </div>
           </CardContent>
         </Card>
