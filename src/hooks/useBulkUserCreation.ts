@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface User {
   name: string;
@@ -12,35 +13,26 @@ interface User {
 export const useBulkUserCreation = () => {
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
-  const [secretKey, setSecretKey] = useState('');
 
-  const createUserWithClerk = async (user: User): Promise<boolean> => {
+  const createUserWithSupabase = async (user: User): Promise<boolean> => {
     try {
-      const response = await fetch('/api/create-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          secretKey,
-          user: {
-            emailAddress: [user.email],
-            password: user.password,
-            firstName: user.name.split(' ')[0] || user.name,
-            lastName: user.name.split(' ').slice(1).join(' ') || '',
-            unsafeMetadata: {
-              role: user.role
-            }
-          }
-        }),
+      // Create user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: user.email.trim().toLowerCase(),
+        password: user.password,
+        email_confirm: true,
+        user_metadata: {
+          name: user.name
+        }
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('API error:', error);
+      if (authError) {
+        console.error('Auth error:', authError);
         return false;
       }
 
+      // The profile will be created automatically by the trigger
+      console.log(`✅ Created ${user.email} with ID: ${authData.user?.id}`);
       return true;
     } catch (error) {
       console.error('Error creating user:', error);
@@ -49,15 +41,6 @@ export const useBulkUserCreation = () => {
   };
 
   const handleBulkUserCreation = async (users: User[]) => {
-    if (!secretKey.startsWith('sk_')) {
-      toast({
-        title: "Invalid Secret Key",
-        description: "Please enter a valid Clerk secret key (starts with 'sk_')",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (users.length === 0) {
       toast({
         title: "No Users to Create",
@@ -72,7 +55,7 @@ export const useBulkUserCreation = () => {
     let errorCount = 0;
 
     for (const user of users) {
-      const success = await createUserWithClerk(user);
+      const success = await createUserWithSupabase(user);
       if (success) {
         successCount++;
       } else {
@@ -94,8 +77,6 @@ export const useBulkUserCreation = () => {
   };
 
   return {
-    secretKey,
-    setSecretKey,
     isCreating,
     handleBulkUserCreation
   };

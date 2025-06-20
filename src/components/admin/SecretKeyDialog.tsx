@@ -1,56 +1,40 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Key } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Database, CheckCircle } from 'lucide-react';
 
 interface SecretKeyDialogProps {
-  secretKey: string;
-  setSecretKey: (key: string) => void;
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;
 }
 
 const SecretKeyDialog: React.FC<SecretKeyDialogProps> = ({
-  secretKey,
-  setSecretKey,
   showDialog,
   setShowDialog
 }) => {
   return (
     <Dialog open={showDialog} onOpenChange={setShowDialog}>
-      <DialogTrigger asChild>
-        <Button className="w-full mb-4">
-          <Key className="h-4 w-4 mr-2" />
-          Setup Clerk Secret Key
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Enter Clerk Secret Key</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Supabase Integration Active
+          </DialogTitle>
           <DialogDescription>
-            Your Clerk secret key (starts with 'sk_') for creating users
+            Your bulk user creation is now powered by Supabase Auth
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="secret-key">Secret Key</Label>
-            <Input
-              id="secret-key"
-              type="password"
-              placeholder="sk_..."
-              value={secretKey}
-              onChange={(e) => setSecretKey(e.target.value)}
-            />
+          <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <span className="text-green-800">Direct Supabase integration - no external APIs needed</span>
           </div>
           <Button 
             onClick={() => setShowDialog(false)}
-            disabled={!secretKey}
             className="w-full"
           >
-            Save Secret Key
+            Got it!
           </Button>
         </div>
       </DialogContent>
