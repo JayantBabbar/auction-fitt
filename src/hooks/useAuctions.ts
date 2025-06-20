@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Mock auction type
@@ -22,9 +21,9 @@ type Auction = {
   updated_at: string;
   bid_count: number;
   bidder_count: number;
-  dimensions?: string | null;
-  provenance?: string | null;
-  weight?: string | null;
+  dimensions: string;
+  provenance: string;
+  weight: string;
 };
 
 type AuctionUpdate = Partial<Auction>;
