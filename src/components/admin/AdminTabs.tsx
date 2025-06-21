@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Users, TrendingUp } from 'lucide-react';
 import AuctionsList from './AuctionsList';
+import SimpleUserManagement from './SimpleUserManagement';
 
 interface AdminTabsProps {
   auctions?: any[];
@@ -13,8 +14,9 @@ const AdminTabs = ({ auctions }: AdminTabsProps) => {
   return (
     <Tabs defaultValue="auctions" className="space-y-6">
       <div className="flex items-center justify-between">
-        <TabsList className="grid grid-cols-3 lg:w-[400px] bg-white border border-slate-200">
+        <TabsList className="grid grid-cols-4 lg:w-[500px] bg-white border border-slate-200">
           <TabsTrigger value="auctions" className="data-[state=active]:bg-slate-100">Auctions</TabsTrigger>
+          <TabsTrigger value="users" className="data-[state=active]:bg-slate-100">Users</TabsTrigger>
           <TabsTrigger value="bidders" className="data-[state=active]:bg-slate-100">Bidders</TabsTrigger>
           <TabsTrigger value="reports" className="data-[state=active]:bg-slate-100">Reports</TabsTrigger>
         </TabsList>
@@ -22,6 +24,14 @@ const AdminTabs = ({ auctions }: AdminTabsProps) => {
 
       <TabsContent value="auctions" className="space-y-6">
         <AuctionsList auctions={auctions} />
+      </TabsContent>
+
+      <TabsContent value="users" className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-serif font-semibold text-slate-900">User Management</h2>
+          <p className="text-slate-600 mt-1">Create and manage user accounts</p>
+        </div>
+        <SimpleUserManagement />
       </TabsContent>
 
       <TabsContent value="bidders" className="space-y-6">
