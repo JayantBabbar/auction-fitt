@@ -20,25 +20,36 @@ const SupabaseLoginForm = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    console.log('Attempting login with:', { email, passwordLength: password.length });
+
     try {
       const { error } = await signIn(email, password);
       
       if (error) {
+        console.error('Login error:', error);
+        console.error('Error details:', {
+          message: error.message,
+          status: error.status,
+          statusText: error.statusText
+        });
+        
         toast({
           title: "Login Failed",
-          description: error.message,
+          description: `${error.message} (Debug: Check console for details)`,
           variant: "destructive",
         });
       } else {
+        console.log('Login successful');
         toast({
           title: "Login Successful",
           description: "Welcome back!",
         });
       }
     } catch (error) {
+      console.error('Unexpected login error:', error);
       toast({
         title: "Login Failed",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred. Check console for details.",
         variant: "destructive",
       });
     } finally {
@@ -47,6 +58,7 @@ const SupabaseLoginForm = () => {
   };
 
   const handleTestLogin = (testEmail: string, testPassword: string) => {
+    console.log('Setting test credentials:', { email: testEmail, passwordLength: testPassword.length });
     setEmail(testEmail);
     setPassword(testPassword);
   };
@@ -146,6 +158,13 @@ const SupabaseLoginForm = () => {
                   Login as Bidder (Abhishek)
                 </Button>
               </div>
+            </div>
+
+            {/* Debug info */}
+            <div className="pt-2 text-xs text-gray-500">
+              <p>Debug: Email confirmation should be disabled in Supabase settings</p>
+              <p>Current email: {email}</p>
+              <p>Password length: {password.length}</p>
             </div>
           </CardContent>
         </Card>
