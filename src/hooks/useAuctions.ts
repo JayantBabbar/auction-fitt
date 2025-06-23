@@ -1,5 +1,4 @@
 
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Mock auction type
@@ -33,12 +32,17 @@ type AuctionUpdate = Partial<Auction>;
 // Use the secure version of create auction hook
 export { useSecureCreateAuction as useCreateAuction } from '@/hooks/useSecureAuctions';
 
+// Simple in-memory storage for created auctions (in a real app, this would be a database)
+let createdAuctions: Auction[] = [];
+
 export const useAuctions = () => {
   return useQuery({
     queryKey: ['auctions'],
     queryFn: async () => {
-      // Mock auctions data since we're not using Supabase
-      const mockAuctions: Auction[] = [
+      console.log('Fetching auctions, created auctions:', createdAuctions);
+      
+      // Return created auctions along with sample auctions
+      const sampleAuctions: Auction[] = [
         {
           id: '1',
           title: 'Sample Auction 1',
@@ -65,10 +69,46 @@ export const useAuctions = () => {
         }
       ];
       
-      console.log('Returning mock auctions:', mockAuctions);
-      return mockAuctions;
+      // Combine sample auctions with created auctions
+      const allAuctions = [...sampleAuctions, ...createdAuctions];
+      console.log('Returning all auctions:', allAuctions);
+      return allAuctions;
     },
   });
+};
+
+// Function to add a newly created auction to our storage
+export const addCreatedAuction = (auction: any) => {
+  console.log('Adding created auction to storage:', auction);
+  
+  // Convert the auction to our Auction type
+  const formattedAuction: Auction = {
+    id: auction.id,
+    title: auction.title,
+    description: auction.description,
+    category: auction.category,
+    starting_bid: auction.starting_bid,
+    current_bid: auction.current_bid || auction.starting_bid,
+    reserve_price: auction.reserve_price,
+    bid_increment: auction.bid_increment,
+    condition: auction.condition,
+    start_time: auction.start_time,
+    end_time: auction.end_time,
+    auction_duration: auction.auction_duration,
+    status: auction.status,
+    image_urls: auction.image_urls || [],
+    created_by: auction.created_by,
+    created_at: auction.created_at,
+    updated_at: auction.updated_at || auction.created_at,
+    bid_count: auction.bid_count || 0,
+    bidder_count: auction.bidder_count || 0,
+    dimensions: auction.dimensions || '',
+    provenance: auction.provenance || '',
+    weight: auction.weight || ''
+  };
+  
+  createdAuctions.push(formattedAuction);
+  console.log('Updated created auctions:', createdAuctions);
 };
 
 export const useUpdateAuction = () => {

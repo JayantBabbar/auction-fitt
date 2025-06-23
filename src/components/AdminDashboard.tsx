@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
+import { useAuctions } from '@/hooks/useAuctions';
 import { Button } from '@/components/ui/button';
 import AdminHeader from './admin/AdminHeader';
 import AdminStats from './admin/AdminStats';
@@ -11,10 +12,12 @@ import { Loader2, AlertCircle, Plus } from 'lucide-react';
 const AdminDashboard = () => {
   const { profile, signOut } = useSimpleAuth();
   const navigate = useNavigate();
+  const { data: auctions = [], isLoading, error } = useAuctions();
 
   // Add debugging logs
   console.log('AdminDashboard - Current profile:', profile);
   console.log('AdminDashboard - User role:', profile?.role);
+  console.log('AdminDashboard - Auctions data:', auctions);
 
   // Check if user has admin role
   if (profile?.role !== 'admin') {
@@ -37,33 +40,33 @@ const AdminDashboard = () => {
     );
   }
 
-  // Mock auction data for demo purposes
-  const mockAuctions = [
-    {
-      id: '1',
-      title: 'Sample Auction 1',
-      status: 'active',
-      current_bid: 1500,
-      starting_bid: 1000,
-      end_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: '2',
-      title: 'Sample Auction 2',
-      status: 'completed',
-      current_bid: 2500,
-      starting_bid: 2000,
-      end_time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: '3',
-      title: 'Sample Auction 3',
-      status: 'active',
-      current_bid: 750,
-      starting_bid: 500,
-      end_time: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-    }
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Loading auctions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50/30 flex items-center justify-center">
+        <div className="text-center max-w-md p-6">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Auctions</h2>
+          <p className="text-slate-600 mb-4">
+            There was an error loading the auction data.
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/30">
@@ -86,8 +89,8 @@ const AdminDashboard = () => {
           </Button>
         </div>
 
-        <AdminStats auctions={mockAuctions} />
-        <AdminTabs auctions={mockAuctions} />
+        <AdminStats auctions={auctions} />
+        <AdminTabs auctions={auctions} />
       </div>
     </div>
   );

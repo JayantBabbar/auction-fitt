@@ -1,8 +1,8 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { validateAuctionTitle, validateAuctionDescription } from '@/utils/inputValidation';
+import { addCreatedAuction } from '@/hooks/useAuctions';
 
 type AuctionInsert = {
   created_by: string;
@@ -68,6 +68,9 @@ export const useSecureCreateAuction = () => {
       };
       
       console.log('Mock auction created successfully:', mockCreatedAuction);
+      
+      // Add the created auction to our storage so it appears in the list
+      addCreatedAuction(mockCreatedAuction);
       
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 1000));
