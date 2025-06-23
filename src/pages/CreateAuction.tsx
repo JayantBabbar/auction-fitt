@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/ClerkAuthContext';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { useCreateAuction } from '@/hooks/useAuctions';
 import { ImageUpload } from '@/components/ImageUpload';
 import { Button } from '@/components/ui/button';
@@ -70,7 +71,7 @@ const getPlaceholderImages = (category: string): string[] => {
 
 const CreateAuction = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
   const { toast } = useToast();
   const createAuctionMutation = useCreateAuction();
   const [imageUrls, setImageUrls] = useState<string[]>([]);
