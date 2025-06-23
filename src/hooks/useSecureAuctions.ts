@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/ClerkAuthContext';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { validateAuctionTitle, validateAuctionDescription } from '@/utils/inputValidation';
 
 type AuctionInsert = {
@@ -23,16 +23,16 @@ type AuctionInsert = {
 export const useSecureCreateAuction = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
   
   return useMutation({
     mutationFn: async (auction: AuctionInsert) => {
       if (!user) {
-        console.log('No user found in Clerk context');
+        console.log('No user found in SimpleAuth context');
         throw new Error('User not authenticated');
       }
 
-      console.log('Authenticated user from Clerk:', user);
+      console.log('Authenticated user from SimpleAuth:', user);
 
       // Validate and sanitize inputs
       const titleValidation = validateAuctionTitle(auction.title || '');
