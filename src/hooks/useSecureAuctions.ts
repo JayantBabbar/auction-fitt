@@ -8,6 +8,25 @@ import type { Database } from '@/integrations/supabase/types';
 
 type AuctionInsert = Database['public']['Tables']['auctions']['Insert'];
 
+// Helper function to generate a consistent UUID from SimpleAuth user ID
+const generateUUIDFromSimpleAuthId = (simpleAuthId: string): string => {
+  // Create a consistent UUID v4 based on the SimpleAuth ID
+  // This ensures the same SimpleAuth user always gets the same UUID
+  const namespace = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // Fixed namespace UUID
+  const hash = btoa(namespace + simpleAuthId).replace(/[^a-f0-9]/gi, '').toLowerCase();
+  
+  // Format as UUID v4
+  const uuid = [
+    hash.substr(0, 8),
+    hash.substr(8, 4),
+    '4' + hash.substr(13, 3), // Version 4
+    ((parseInt(hash.substr(16, 1), 16) & 0x3) | 0x8).toString(16) + hash.substr(17, 3), // Variant bits
+    hash.substr(20, 12)
+  ].join('-');
+  
+  return uuid.length === 36 ? uuid : '12345678-1234-4567-8901-' + hash.substr(0, 12).padStart(12, '0');
+};
+
 export const useSecureCreateAuction = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -35,26 +54,25 @@ export const useSecureCreateAuction = () => {
         throw new Error(`Description validation failed: ${descriptionValidation.error}`);
       }
 
-      // For SimpleAuth, we'll use the user ID directly without UUID conversion
-      // since we're bypassing Supabase auth
-      console.log('Using SimpleAuth user ID:', user.id);
+      // Generate consistent UUID for SimpleAuth user
+      const userUUID = generateUUIDFromSimpleAuthId(user.id);
+      console.log('Generated UUID for SimpleAuth user:', userUUID);
 
-      // Check if profile exists, if not create it
+      // Check if profile exists, if not create it with the generated UUID
       const { data: existingProfile, error: profileCheckError } = await supabase
         .from('profiles')
         .select('id, role')
-        .eq('id', user.id)
+        .eq('id', userUUID)
         .single();
 
       if (profileCheckError && profileCheckError.code === 'PGRST116') {
-        // Profile doesn't exist, create it using direct insert (bypassing RLS)
-        console.log('Creating profile for SimpleAuth user:', user.id);
+        // Profile doesn't exist, create it using the generated UUID
+        console.log('Creating profile for SimpleAuth user with UUID:', userUUID);
         
-        // Use the service role or disable RLS temporarily for this operation
         const { error: profileCreateError } = await supabase
           .from('profiles')
           .insert({
-            id: user.id,
+            id: userUUID,
             name: user.name,
             email: user.email,
             role: user.role === 'admin' ? 'admin' : 'bidder'
@@ -62,13 +80,11 @@ export const useSecureCreateAuction = () => {
 
         if (profileCreateError) {
           console.error('Failed to create user profile:', profileCreateError);
-          // If we can't create the profile, we'll proceed without it for SimpleAuth
-          console.log('Proceeding without profile creation for SimpleAuth user');
+          throw new Error(`Failed to create user profile: ${profileCreateError.message}`);
         }
       } else if (profileCheckError) {
         console.error('Profile check error:', profileCheckError);
-        // For SimpleAuth, we'll continue even if profile check fails
-        console.log('Continuing with SimpleAuth despite profile check error');
+        throw new Error(`Profile check failed: ${profileCheckError.message}`);
       }
 
       // Verify user has admin role
@@ -82,12 +98,12 @@ export const useSecureCreateAuction = () => {
         ...auction,
         title: titleValidation.sanitized || auction.title,
         description: descriptionValidation.sanitized || auction.description,
-        created_by: user.id, // Use SimpleAuth user ID directly
+        created_by: userUUID, // Use generated UUID instead of SimpleAuth ID
         condition: auction.condition as Database['public']['Enums']['auction_condition'],
         status: auction.status as Database['public']['Enums']['auction_status']
       };
 
-      console.log('Creating auction with sanitized data:', sanitizedAuction);
+      console.log('Creating auction with sanitized data and UUID:', sanitizedAuction);
       
       // Save to Supabase - insert single object, not array
       const { data, error } = await supabase
@@ -113,9 +129,7 @@ export const useSecureCreateAuction = () => {
         } else if (error.code === '42501') {
           userFriendlyMessage += 'Permission denied. Please ensure you have admin privileges. Try logging out and back in.';
         } else if (error.message.includes('row-level security')) {
-          userFriendlyMessage += 'Authentication error. This may be due to SimpleAuth bypass mode. The auction creation failed due to security policies.';
-        } else if (error.message.includes('invalid input syntax for type uuid')) {
-          userFriendlyMessage += 'User authentication format error. Please try logging out and back in.';
+          userFriendlyMessage += 'Authentication error. Please try logging out and back in.';
         } else {
           userFriendlyMessage += `Database error: ${error.message}. Please check your input data and try again.`;
         }
