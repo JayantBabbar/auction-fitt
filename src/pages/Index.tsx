@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import SupabaseLoginForm from '@/components/SupabaseLoginForm';
+import { useAuth } from '@/contexts/AuthContext';
+import LoginForm from '@/components/LoginForm';
 import AdminDashboard from '@/components/AdminDashboard';
 import BidderDashboard from '@/components/BidderDashboard';
 
 const Index = () => {
-  const { user, profile, isLoading } = useSupabaseAuth();
+  const { user, profile, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -21,7 +21,7 @@ const Index = () => {
 
   // Show login form if not authenticated
   if (!user || !profile) {
-    return <SupabaseLoginForm />;
+    return <LoginForm />;
   }
 
   // Show appropriate dashboard based on role

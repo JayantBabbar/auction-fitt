@@ -3,8 +3,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://vyprfzqpmjhagsfivavd.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5cHJmenFwbWpoYWdzZml2YXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNjk2ODgsImV4cCI6MjA2NTg0NTY4OH0.9pPEZqx113L_LXWEclojrdVGZl1xRs31kQVlYBAOM6E";
+const SUPABASE_URL = "https://zpsiwjuegmbtkpbnrpsz.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwc2l3anVlZ21idGtwYm5ycHN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MjMyNDUsImV4cCI6MjA2NjI5OTI0NX0.OMi6rVED28F0YzkxBa5rYYwRqjIlAbpR2rRdSg_-Eug";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 });
 
 // Add debugging
-console.log('Supabase client initialized with new key');
+console.log('Supabase client initialized with new project');
 console.log('URL:', SUPABASE_URL);
 console.log('Key starts with:', SUPABASE_PUBLISHABLE_KEY.substring(0, 30) + '...');

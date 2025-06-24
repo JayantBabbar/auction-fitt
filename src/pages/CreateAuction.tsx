@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSecureCreateAuction } from '@/hooks/useSecureAuctions';
 import { ImageUpload } from '@/components/ImageUpload';
 import { Button } from '@/components/ui/button';
@@ -81,7 +80,7 @@ const getAuctionStatus = (startTime: Date, endTime: Date): 'draft' | 'upcoming' 
 
 const CreateAuction = () => {
   const navigate = useNavigate();
-  const { user } = useSimpleAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const createAuctionMutation = useSecureCreateAuction();
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -101,10 +100,20 @@ const CreateAuction = () => {
   });
 
   const onSubmit = async (data: CreateAuctionForm) => {
-    if (!user?.id) {
+    if (!user?.id || !profile) {
       toast({
         title: "Authentication Error",
         description: "You must be logged in to create an auction.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verify user has admin role
+    if (profile.role !== 'admin') {
+      toast({
+        title: "Permission Denied",
+        description: "Only administrators can create auctions.",
         variant: "destructive",
       });
       return;
@@ -149,7 +158,7 @@ const CreateAuction = () => {
       const endTimeISO = data.end_time instanceof Date ? data.end_time.toISOString() : new Date(data.end_time).toISOString();
 
       const auctionData = {
-        created_by: user.id,
+        created_by: user.id, // Use Supabase user ID directly
         title: data.title,
         description: data.description,
         category: data.category,

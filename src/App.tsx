@@ -4,8 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SimpleAuthProvider } from "@/contexts/SimpleAuthContext";
-import SimpleIndex from "./pages/SimpleIndex";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Index from "./pages/Index";
 import CreateAuction from "./pages/CreateAuction";
 import RoleAssignment from "./pages/RoleAssignment";
 import NotFound from "./pages/NotFound";
@@ -17,16 +17,16 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <SimpleAuthProvider>
+      <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<SimpleIndex />} />
+            <Route path="/" element={<Index />} />
             <Route path="/create-auction" element={<CreateAuction />} />
             <Route path="/admin-setup" element={<RoleAssignment />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </SimpleAuthProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
