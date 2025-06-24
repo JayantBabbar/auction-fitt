@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -28,8 +29,6 @@ import {
   Loader2,
   Image as ImageIcon
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 interface CreateAuctionForm {
   title: string;
@@ -145,6 +144,10 @@ const CreateAuction = () => {
     const finalImageUrls = imageUrls.length > 0 ? imageUrls : getPlaceholderImages(data.category);
 
     try {
+      // Ensure dates are properly formatted as ISO strings
+      const startTimeISO = data.start_time instanceof Date ? data.start_time.toISOString() : new Date(data.start_time).toISOString();
+      const endTimeISO = data.end_time instanceof Date ? data.end_time.toISOString() : new Date(data.end_time).toISOString();
+
       const auctionData = {
         created_by: user.id,
         title: data.title,
@@ -154,14 +157,14 @@ const CreateAuction = () => {
         reserve_price: data.reserve_price || null,
         bid_increment: data.bid_increment,
         condition: data.condition,
-        start_time: data.start_time.toISOString(),
-        end_time: data.end_time.toISOString(),
+        start_time: startTimeISO,
+        end_time: endTimeISO,
         auction_duration: durationDays,
         status: auctionStatus,
         image_urls: finalImageUrls,
       };
 
-      console.log('Submitting auction data with status:', auctionStatus, auctionData);
+      console.log('Submitting auction data with properly formatted dates:', auctionData);
 
       await createAuctionMutation.mutateAsync(auctionData);
 
