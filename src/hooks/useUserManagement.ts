@@ -1,12 +1,20 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreateUserData {
   name: string;
   email: string;
-  password: string;
   role: 'admin' | 'bidder';
+}
+
+interface CreateUserResponse {
+  success?: boolean;
+  user_id?: string;
+  email?: string;
+  temporary_password?: string;
+  error?: string;
 }
 
 export const useUserManagement = () => {
@@ -17,32 +25,41 @@ export const useUserManagement = () => {
     setIsCreating(true);
     
     try {
-      console.log('Creating user:', { ...userData, password: '[HIDDEN]' });
+      console.log('Creating user via Supabase function:', { ...userData });
       
-      const response = await fetch('/functions/v1/create-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
+      const { data, error } = await supabase.rpc('admin_create_user', {
+        user_email: userData.email,
+        user_name: userData.name,
+        user_role: userData.role
       });
 
-      const result = await response.json();
-      
-      if (!response.ok) {
-        console.error('Create user error:', result);
+      if (error) {
+        console.error('Supabase function error:', error);
         toast({
           title: "Error Creating User",
-          description: result.error || 'Failed to create user',
+          description: error.message || 'Failed to create user',
           variant: "destructive",
         });
         return false;
       }
 
-      console.log('User created successfully:', result);
+      const response = data as CreateUserResponse;
+      
+      if (response.error) {
+        console.error('User creation error:', response.error);
+        toast({
+          title: "Error Creating User",
+          description: response.error,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      console.log('User created successfully:', response);
       toast({
         title: "User Created Successfully",
-        description: `User ${userData.email} has been created with role ${userData.role}`,
+        description: `User ${userData.email} created. Temporary password: ${response.temporary_password}`,
+        duration: 10000, // Show longer so they can copy the password
       });
       
       return true;
@@ -67,8 +84,8 @@ export const useUserManagement = () => {
       if (success) {
         successCount++;
       }
-      // Small delay to avoid overwhelming the server
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Small delay between users to avoid overwhelming the system
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
     return successCount;
