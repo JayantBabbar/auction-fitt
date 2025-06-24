@@ -41,7 +41,7 @@ interface CreateAuctionForm {
   reserve_price: number;
   bid_increment: number;
   start_time: Date;
-  duration: number; // Duration in hours
+  end_time: Date;
   condition: 'excellent' | 'very_good' | 'good' | 'fair' | 'poor';
 }
 
@@ -98,7 +98,7 @@ const CreateAuction = () => {
       reserve_price: 0,
       bid_increment: 50,
       start_time: new Date(),
-      duration: 24, // Default to 24 hours
+      end_time: new Date(Date.now() + 24 * 60 * 60 * 1000), // Default to 24 hours from now
       condition: 'excellent',
     },
   });
@@ -108,6 +108,16 @@ const CreateAuction = () => {
       toast({
         title: "Authentication Error",
         description: "You must be logged in to create an auction.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Client-side validation for end time
+    if (data.end_time <= data.start_time) {
+      toast({
+        title: "Validation Error",
+        description: "End time must be after start time.",
         variant: "destructive",
       });
       return;
@@ -126,16 +136,14 @@ const CreateAuction = () => {
     console.log('User creating auction:', user);
     console.log('Form data:', data);
 
-    // Calculate end_time based on start_time + duration in hours
-    const endTime = new Date(data.start_time.getTime() + (data.duration * 60 * 60 * 1000));
-
     // Calculate duration in days for the database
-    const durationDays = Math.ceil(data.duration / 24);
+    const durationMs = data.end_time.getTime() - data.start_time.getTime();
+    const durationDays = Math.ceil(durationMs / (24 * 60 * 60 * 1000));
 
     // Determine auction status based on timing
-    const auctionStatus = getAuctionStatus(data.start_time, endTime);
+    const auctionStatus = getAuctionStatus(data.start_time, data.end_time);
 
-    // Use placeholder images if no images uploaded
+    // Use uploaded images if available, otherwise use placeholder images
     const finalImageUrls = imageUrls.length > 0 ? imageUrls : getPlaceholderImages(data.category);
 
     try {
@@ -149,7 +157,7 @@ const CreateAuction = () => {
         bid_increment: data.bid_increment,
         condition: data.condition,
         start_time: data.start_time.toISOString(),
-        end_time: endTime.toISOString(),
+        end_time: data.end_time.toISOString(),
         auction_duration: durationDays,
         status: auctionStatus,
         image_urls: finalImageUrls,
@@ -171,27 +179,7 @@ const CreateAuction = () => {
       navigate('/');
     } catch (error: any) {
       console.error('Error creating auction:', error);
-      
-      // Handle specific database errors
-      let errorMessage = "Failed to create auction. Please try again.";
-      
-      if (error?.message?.includes('auctions_check')) {
-        errorMessage = "Reserve price must be greater than or equal to starting bid.";
-      } else if (error?.message?.includes('starting_bid')) {
-        errorMessage = "Starting bid must be a positive number.";
-      } else if (error?.message?.includes('title')) {
-        errorMessage = "Asset name is required.";
-      } else if (error?.message?.includes('description')) {
-        errorMessage = "Description is required.";
-      } else if (error?.code === '23505') {
-        errorMessage = "An auction with this title already exists.";
-      }
-      
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      // Error handling is now done in the mutation's onError callback
     }
   };
 
@@ -476,28 +464,52 @@ const CreateAuction = () => {
 
                     <FormField
                       control={form.control}
-                      name="duration"
-                      rules={{ required: "Duration is required" }}
+                      name="end_time"
+                      rules={{ 
+                        required: "End time is required",
+                        validate: (value) => {
+                          const startTime = form.getValues('start_time');
+                          if (value <= startTime) {
+                            return "End time must be after start time";
+                          }
+                          return true;
+                        }
+                      }}
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-semibold">Auction Duration</FormLabel>
-                          <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                            <FormControl>
-                              <SelectTrigger className="h-11 border-border/60 focus:border-primary">
-                                <SelectValue placeholder="Select duration" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="1">1 hour</SelectItem>
-                              <SelectItem value="2">2 hours</SelectItem>
-                              <SelectItem value="3">3 hours</SelectItem>
-                              <SelectItem value="5">5 hours</SelectItem>
-                              <SelectItem value="7">7 hours</SelectItem>
-                              <SelectItem value="10">10 hours</SelectItem>
-                            </SelectContent>
-                          </Select>
+                        <FormItem className="flex flex-col">
+                          <FormLabel className="text-sm font-semibold">Auction End Date & Time</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "h-11 pl-3 text-left font-normal border-border/60 hover:border-primary transition-colors",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP 'at' p")
+                                  ) : (
+                                    <span>Pick end date & time</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => date < new Date()}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
                           <FormDescription className="text-sm">
-                            How long the auction will run from the start time
+                            When the auction will end and close for bidding
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
