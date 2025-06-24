@@ -4,22 +4,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { validateAuctionTitle, validateAuctionDescription } from '@/utils/inputValidation';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
-type AuctionInsert = {
-  created_by: string;
-  title: string;
-  description: string;
-  category: string;
-  starting_bid: number;
-  reserve_price?: number | null;
-  bid_increment: number;
-  condition: string;
-  start_time: string;
-  end_time: string;
-  auction_duration: number;
-  status: string;
-  image_urls: string[];
-};
+type AuctionInsert = Database['public']['Tables']['auctions']['Insert'];
 
 export const useSecureCreateAuction = () => {
   const queryClient = useQueryClient();
@@ -48,20 +35,22 @@ export const useSecureCreateAuction = () => {
         throw new Error(descriptionValidation.error);
       }
 
-      // Create sanitized auction object
-      const sanitizedAuction = {
+      // Create sanitized auction object with proper types
+      const sanitizedAuction: AuctionInsert = {
         ...auction,
         title: titleValidation.sanitized || auction.title,
         description: descriptionValidation.sanitized || auction.description,
-        created_by: user.id
+        created_by: user.id,
+        condition: auction.condition as Database['public']['Enums']['auction_condition'],
+        status: auction.status as Database['public']['Enums']['auction_status']
       };
 
       console.log('Creating auction with sanitized data:', sanitizedAuction);
       
-      // Actually save to Supabase instead of mock
+      // Save to Supabase - insert single object, not array
       const { data, error } = await supabase
         .from('auctions')
-        .insert([sanitizedAuction])
+        .insert(sanitizedAuction)
         .select()
         .single();
 
