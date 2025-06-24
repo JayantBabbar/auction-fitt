@@ -69,6 +69,19 @@ const getPlaceholderImages = (category: string): string[] => {
   ];
 };
 
+// Helper function to determine auction status based on timing
+const getAuctionStatus = (startTime: Date, endTime: Date): 'draft' | 'upcoming' | 'active' | 'ended' => {
+  const now = new Date();
+  
+  if (now < startTime) {
+    return 'upcoming';
+  } else if (now >= startTime && now < endTime) {
+    return 'active';
+  } else {
+    return 'ended';
+  }
+};
+
 const CreateAuction = () => {
   const navigate = useNavigate();
   const { user } = useSimpleAuth();
@@ -119,6 +132,9 @@ const CreateAuction = () => {
     // Calculate duration in days for the database
     const durationDays = Math.ceil(data.duration / 24);
 
+    // Determine auction status based on timing
+    const auctionStatus = getAuctionStatus(data.start_time, endTime);
+
     // Use placeholder images if no images uploaded
     const finalImageUrls = imageUrls.length > 0 ? imageUrls : getPlaceholderImages(data.category);
 
@@ -135,17 +151,21 @@ const CreateAuction = () => {
         start_time: data.start_time.toISOString(),
         end_time: endTime.toISOString(),
         auction_duration: durationDays,
-        status: 'draft' as const,
+        status: auctionStatus,
         image_urls: finalImageUrls,
       };
 
-      console.log('Submitting auction data:', auctionData);
+      console.log('Submitting auction data with status:', auctionStatus, auctionData);
 
       await createAuctionMutation.mutateAsync(auctionData);
 
+      const statusMessage = auctionStatus === 'active' ? 'and is now live' : 
+                           auctionStatus === 'upcoming' ? 'and will start at the scheduled time' : 
+                           'but has already ended due to the timing';
+
       toast({
         title: "Auction Created",
-        description: `"${data.title}" has been successfully created as a draft.`,
+        description: `"${data.title}" has been successfully created ${statusMessage}.`,
       });
 
       navigate('/');
