@@ -1,8 +1,9 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { validateAuctionTitle, validateAuctionDescription } from '@/utils/inputValidation';
-import { addCreatedAuction } from '@/hooks/useAuctions';
+import { supabase } from '@/integrations/supabase/client';
 
 type AuctionInsert = {
   created_by: string;
@@ -57,25 +58,20 @@ export const useSecureCreateAuction = () => {
 
       console.log('Creating auction with sanitized data:', sanitizedAuction);
       
-      // Since we're not using Supabase, we'll simulate a successful creation
-      // In a real implementation, this would call your actual backend API
-      const mockCreatedAuction = {
-        id: `auction_${Date.now()}`,
-        ...sanitizedAuction,
-        created_at: new Date().toISOString(),
-        current_bid: sanitizedAuction.starting_bid,
-        bid_count: 0
-      };
-      
-      console.log('Mock auction created successfully:', mockCreatedAuction);
-      
-      // Add the created auction to our storage so it appears in the list
-      addCreatedAuction(mockCreatedAuction);
-      
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return mockCreatedAuction;
+      // Actually save to Supabase instead of mock
+      const { data, error } = await supabase
+        .from('auctions')
+        .insert([sanitizedAuction])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(error.message);
+      }
+
+      console.log('Auction created successfully in Supabase:', data);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auctions'] });
