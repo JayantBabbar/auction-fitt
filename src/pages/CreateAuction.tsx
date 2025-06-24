@@ -1,17 +1,15 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
-import { useCreateAuction } from '@/hooks/useAuctions';
+import { useSecureCreateAuction } from '@/hooks/useSecureAuctions';
 import { ImageUpload } from '@/components/ImageUpload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DateTimePicker } from '@/components/DateTimePicker';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Form,
@@ -86,7 +84,7 @@ const CreateAuction = () => {
   const navigate = useNavigate();
   const { user } = useSimpleAuth();
   const { toast } = useToast();
-  const createAuctionMutation = useCreateAuction();
+  const createAuctionMutation = useSecureCreateAuction();
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   
   const form = useForm<CreateAuctionForm>({
@@ -427,36 +425,15 @@ const CreateAuction = () => {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel className="text-sm font-semibold">Auction Start Date & Time</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "h-11 pl-3 text-left font-normal border-border/60 hover:border-primary transition-colors",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP 'at' p")
-                                  ) : (
-                                    <span>Pick start date & time</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) => date < new Date()}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <FormControl>
+                            <DateTimePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Pick start date & time"
+                              disabled={(date) => date < new Date()}
+                              className="h-11 border-border/60 hover:border-primary transition-colors"
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -478,36 +455,15 @@ const CreateAuction = () => {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel className="text-sm font-semibold">Auction End Date & Time</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "h-11 pl-3 text-left font-normal border-border/60 hover:border-primary transition-colors",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP 'at' p")
-                                  ) : (
-                                    <span>Pick end date & time</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) => date < new Date()}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <FormControl>
+                            <DateTimePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Pick end date & time"
+                              disabled={(date) => date < new Date()}
+                              className="h-11 border-border/60 hover:border-primary transition-colors"
+                            />
+                          </FormControl>
                           <FormDescription className="text-sm">
                             When the auction will end and close for bidding
                           </FormDescription>

@@ -36,10 +36,44 @@ export const useSecureCreateAuction = () => {
       }
 
       // Convert string user ID to a proper UUID format for Supabase
-      // For SimpleAuth, we'll generate a UUID-like string from the user ID
       const userUuid = user.id.length < 36 ? 
         `00000000-0000-0000-0000-${user.id.padStart(12, '0')}` : 
         user.id;
+
+      // First, ensure the user profile exists in the profiles table
+      console.log('Checking/creating user profile for UUID:', userUuid);
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from('profiles')
+        .select('id, role')
+        .eq('id', userUuid)
+        .single();
+
+      if (profileCheckError && profileCheckError.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        console.log('Creating profile for user:', userUuid);
+        const { error: profileCreateError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userUuid,
+            name: user.name,
+            email: user.email,
+            role: user.role === 'admin' ? 'admin' : 'bidder'
+          });
+
+        if (profileCreateError) {
+          console.error('Failed to create user profile:', profileCreateError);
+          throw new Error(`Authentication setup failed: ${profileCreateError.message}`);
+        }
+      } else if (profileCheckError) {
+        console.error('Profile check error:', profileCheckError);
+        throw new Error(`Authentication error: ${profileCheckError.message}`);
+      }
+
+      // Verify user has admin role
+      const userRole = existingProfile?.role || user.role;
+      if (userRole !== 'admin') {
+        throw new Error('Only administrators can create auctions.');
+      }
 
       // Create sanitized auction object with proper types
       const sanitizedAuction: AuctionInsert = {
@@ -74,6 +108,10 @@ export const useSecureCreateAuction = () => {
           userFriendlyMessage += 'Invalid data provided. Please check your inputs.';
         } else if (error.code === '22P02') {
           userFriendlyMessage += 'Invalid data format. Please contact support.';
+        } else if (error.code === '42501') {
+          userFriendlyMessage += 'Permission denied. Please ensure you have admin privileges and try logging out and back in.';
+        } else if (error.message.includes('row-level security')) {
+          userFriendlyMessage += 'Authentication error. Please try logging out and back in, or contact support if the issue persists.';
         } else {
           userFriendlyMessage += `Database error: ${error.message}`;
         }
