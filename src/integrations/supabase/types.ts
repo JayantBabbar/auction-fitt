@@ -41,6 +41,48 @@ export type Database = {
           },
         ]
       }
+      auction_winners: {
+        Row: {
+          auction_id: string
+          created_at: string
+          id: string
+          winner_id: string
+          winning_bid: number
+          won_at: string
+        }
+        Insert: {
+          auction_id: string
+          created_at?: string
+          id?: string
+          winner_id: string
+          winning_bid: number
+          won_at?: string
+        }
+        Update: {
+          auction_id?: string
+          created_at?: string
+          id?: string
+          winner_id?: string
+          winning_bid?: number
+          won_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auction_winners_auction_id_fkey"
+            columns: ["auction_id"]
+            isOneToOne: false
+            referencedRelation: "auctions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auction_winners_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auctions: {
         Row: {
           auction_duration: number
@@ -183,9 +225,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_user_bid: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      get_auction_bids_admin: {
+        Args: { p_auction_id: string }
+        Returns: {
+          bid_id: string
+          bidder_name: string
+          bidder_email: string
+          bid_amount: number
+          bid_timestamp: string
+        }[]
+      }
+      get_highest_bidder: {
+        Args: { p_auction_id: string }
+        Returns: {
+          bidder_name: string
+          bidder_email: string
+          highest_bid: number
+          bid_time: string
+        }[]
+      }
       is_valid_email_domain: {
         Args: { email: string }
         Returns: boolean
+      }
+      place_bid: {
+        Args: { p_auction_id: string; p_bidder_id: string; p_amount: number }
+        Returns: Json
       }
     }
     Enums: {

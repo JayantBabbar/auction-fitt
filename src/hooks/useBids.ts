@@ -48,21 +48,6 @@ export const useUserBids = () => {
   });
 };
 
-export const useAuctionWinners = () => {
-  return useQuery({
-    queryKey: ['auction-winners'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('auction_winners')
-        .select('*')
-        .order('won_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-};
-
 export const useCanUserBid = () => {
   const { mutate: logSecurityEvent } = useSecurityAudit();
   

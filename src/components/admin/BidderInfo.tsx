@@ -19,7 +19,7 @@ const BidderInfo = ({ auctionId, auctionTitle, auctionStatus }: BidderInfoProps)
   const { data: allBids, isLoading: loadingBids } = useAuctionBidsAdmin(auctionId);
 
   const downloadBidsCSV = () => {
-    if (!allBids || allBids.length === 0) {
+    if (!allBids || !Array.isArray(allBids) || allBids.length === 0) {
       toast({
         title: "No Bids Available",
         description: "There are no bids to download for this auction.",
@@ -71,6 +71,9 @@ const BidderInfo = ({ auctionId, auctionTitle, auctionStatus }: BidderInfoProps)
     );
   }
 
+  const bidsCount = Array.isArray(allBids) ? allBids.length : 0;
+  const hasBids = Array.isArray(allBids) && allBids.length > 0;
+
   return (
     <Card className="border-slate-200/60 shadow-sm bg-white/70 backdrop-blur-sm">
       <CardHeader className="pb-4">
@@ -78,9 +81,9 @@ const BidderInfo = ({ auctionId, auctionTitle, auctionStatus }: BidderInfoProps)
           <CardTitle className="text-lg text-slate-900">Bidder Information</CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">
-              {allBids?.length || 0} total bids
+              {bidsCount} total bids
             </Badge>
-            {allBids && allBids.length > 0 && (
+            {hasBids && (
               <Button
                 variant="outline"
                 size="sm"
