@@ -15,6 +15,8 @@ interface AuthContextType {
   user: SupabaseUser | null;
   profile: Profile | null;
   isLoading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -73,6 +75,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signIn = async (email: string, password: string) => {
+    console.log('SignIn called with:', { email, passwordLength: password.length });
+    
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    console.log('SignIn result:', { error });
+    return { error };
+  };
+
+  const signUp = async (email: string, password: string, name: string) => {
+    console.log('SignUp called with:', { email, name, passwordLength: password.length });
+    
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          name: name
+        }
+      }
+    });
+    
+    console.log('SignUp result:', { error });
+    return { error };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -82,6 +116,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user,
       profile,
       isLoading,
+      signIn,
+      signUp,
       signOut
     }}>
       {children}
