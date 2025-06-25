@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import SupabaseLoginForm from '@/components/SupabaseLoginForm';
 import AdminDashboard from '@/components/AdminDashboard';
 import BidderDashboard from '@/components/BidderDashboard';
 
 const Index = () => {
-  const { user, profile, isLoading } = useAuth();
+  const { user, profile, isLoading } = useSupabaseAuth();
 
   if (isLoading) {
     return (

@@ -1,14 +1,14 @@
 
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
 import Index from "@/pages/Index";
 
 function App() {
   return (
-    <AuthProvider>
+    <SupabaseAuthProvider>
       <Index />
       <Toaster />
-    </AuthProvider>
+    </SupabaseAuthProvider>
   );
 }
 
