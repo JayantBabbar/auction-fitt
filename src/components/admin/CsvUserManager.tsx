@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Download, FileText } from 'lucide-react';
+import { Download, Upload, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface User {
   name: string;
@@ -30,122 +31,95 @@ const CsvUserManager: React.FC<CsvUserManagerProps> = ({
 }) => {
   const { toast } = useToast();
   const [defaultRole, setDefaultRole] = useState<'admin' | 'bidder'>('bidder');
-  const [defaultPassword, setDefaultPassword] = useState('AuctionUser2024!');
+  const [defaultPassword, setDefaultPassword] = useState('TempPassword123!');
+
+  const validateEmailDomain = (email: string): boolean => {
+    return email.toLowerCase().endsWith('@fitt-iitd.in');
+  };
 
   const parseCsvText = () => {
-    if (!csvText.trim()) {
-      toast({
-        title: "No Data to Parse",
-        description: "Please enter CSV data first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    console.log('Parsing CSV with length:', csvText.length);
-    
-    const lines = csvText.trim().split('\n').filter(line => line.trim());
-    const parsedUsers: User[] = [];
-    let skippedLines = 0;
+    const lines = csvText.trim().split('\n');
+    const validUsers: User[] = [];
+    const invalidEmails: string[] = [];
     
     lines.forEach((line, index) => {
-      const trimmedLine = line.trim();
-      if (!trimmedLine) {
-        skippedLines++;
-        return;
-      }
-
-      // Split by comma and clean up each field
-      const parts = trimmedLine.split(',').map(item => item.trim());
-      const [name, email, password, role] = parts;
+      const [name, email, password, role] = line.split(',').map(item => item.trim());
       
       if (name && email) {
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-          console.warn(`Invalid email format on line ${index + 1}: ${email}`);
-          skippedLines++;
+        if (!validateEmailDomain(email)) {
+          invalidEmails.push(`Line ${index + 1}: ${email}`);
           return;
         }
 
-        parsedUsers.push({
-          name: name,
+        validUsers.push({
+          name,
           email: email.toLowerCase(),
           password: password || defaultPassword,
           role: (role as 'admin' | 'bidder') || defaultRole
         });
-      } else {
-        console.warn(`Incomplete data on line ${index + 1}: missing name or email`);
-        skippedLines++;
       }
     });
-    
-    console.log(`Parsed ${parsedUsers.length} users, skipped ${skippedLines} lines`);
-    
-    setUsers(parsedUsers);
-    toast({
-      title: "CSV Parsed Successfully",
-      description: `Found ${parsedUsers.length} valid users to create${skippedLines > 0 ? ` (${skippedLines} lines skipped)` : ''}`,
-    });
-  };
 
-  const generateSampleUsers = () => {
-    const sampleData = [];
-    for (let i = 1; i <= 10; i++) {
-      sampleData.push(`Sample User ${i},sampleuser${i}@fitt-iitd.in,${defaultPassword},bidder`);
+    if (invalidEmails.length > 0) {
+      toast({
+        title: "Invalid Email Addresses",
+        description: `The following emails don't end with @fitt-iitd.in:\n${invalidEmails.join('\n')}`,
+        variant: "destructive",
+        duration: 8000,
+      });
     }
-    setCsvText(sampleData.join('\n'));
-    toast({
-      title: "Sample Data Generated",
-      description: "Generated 10 sample users. You can modify this data before parsing.",
-    });
-  };
-
-  const loadExistingUsers = () => {
-    // Load the actual user data from the uploaded list
-    const existingUsersData = `Abhishek,Abhishek@fitt-iitd.in,${defaultPassword},bidder
-Adarsh Madhu,adarshmadhu@fitt-iitd.in,${defaultPassword},bidder
-Aishwarya Shah,aishwaryashah@fitt-iitd.in,${defaultPassword},bidder
-Akash Rana,Akashrana@fitt-iitd.in,${defaultPassword},bidder
-Akash Shiroya,akashshiroya@fitt-iitd.in,${defaultPassword},bidder
-Akshit Gupta,akshitgupta@fitt-iitd.in,${defaultPassword},bidder
-Ankit Saxena,ankit@fitt-iitd.in,${defaultPassword},bidder
-Anmol Chaturvedi,anmolchaturvedi@fitt-iitd.in,${defaultPassword},bidder
-Anubhav Sen,anubhavsen@fitt-iitd.in,${defaultPassword},bidder
-Arabinda Mitra,arabindamitra@fitt-iitd.in,${defaultPassword},bidder`;
     
-    setCsvText(existingUsersData);
-    toast({
-      title: "User Data Loaded",
-      description: "Loaded existing user data. Parse the CSV to create users.",
-    });
+    setUsers(validUsers);
+    
+    if (validUsers.length > 0) {
+      toast({
+        title: "CSV Parsed Successfully",
+        description: `Found ${validUsers.length} valid users to create${invalidEmails.length > 0 ? ` (${invalidEmails.length} invalid emails skipped)` : ''}`,
+      });
+    }
   };
 
   const downloadTemplate = () => {
-    const csvContent = "name,email,password,role\nJohn Doe,john@yourcompany.com,SecurePass123!,bidder\nJane Admin,jane@yourcompany.com,AdminPass456!,admin";
+    const csvContent = "name,email,password,role\nJohn Doe,john@fitt-iitd.in,Password123!,bidder\nJane Admin,jane@fitt-iitd.in,AdminPass456!,admin";
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'bulk_users_template.csv';
+    a.download = 'user_template.csv';
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
+  const loadExistingUserList = () => {
+    const existingUsersCsv = `Admin User,admin@fitt-iitd.in,admin123,admin
+Abhishek,abhishek@fitt-iitd.in,J5b|>)Vdn\\cj,bidder
+Test Bidder 1,bidder1@fitt-iitd.in,password123,bidder
+Test Bidder 2,bidder2@fitt-iitd.in,password123,bidder`;
+    
+    setCsvText(existingUsersCsv);
+    toast({
+      title: "User List Loaded",
+      description: "Sample user list has been loaded. You can modify it as needed.",
+    });
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Email Restriction:</strong> Only email addresses ending with @fitt-iitd.in will be accepted. Invalid emails will be automatically filtered out.
+        </AlertDescription>
+      </Alert>
+
+      <div className="flex gap-2 mb-4">
         <Button variant="outline" onClick={downloadTemplate}>
           <Download className="h-4 w-4 mr-2" />
           Download Template
         </Button>
-        <Button variant="outline" onClick={generateSampleUsers}>
-          <Users className="h-4 w-4 mr-2" />
-          Generate Sample Users
-        </Button>
-        <Button variant="outline" onClick={loadExistingUsers}>
-          <FileText className="h-4 w-4 mr-2" />
-          Load Existing User List
+        <Button variant="outline" onClick={loadExistingUserList}>
+          <Upload className="h-4 w-4 mr-2" />
+          Load Sample User List
         </Button>
       </div>
 
@@ -174,28 +148,24 @@ Arabinda Mitra,arabindamitra@fitt-iitd.in,${defaultPassword},bidder`;
       </div>
 
       <div>
-        <Label htmlFor="csv-data">CSV Data (name,email,password,role)</Label>
+        <Label htmlFor="csv-data">CSV Data</Label>
         <Textarea
           id="csv-data"
           value={csvText}
           onChange={(e) => setCsvText(e.target.value)}
-          placeholder="name,email,password,role&#10;John Doe,john@yourcompany.com,SecurePass123!,bidder&#10;Jane Admin,jane@yourcompany.com,AdminPass456!,admin"
-          rows={12}
-          className="font-mono text-sm"
+          placeholder="name,email,password,role&#10;John Doe,john@fitt-iitd.in,Password123!,bidder&#10;Jane Admin,jane@fitt-iitd.in,AdminPass456!,admin"
+          rows={8}
         />
         <p className="text-sm text-muted-foreground mt-1">
-          Format: name,email,password,role (one user per line). Use the buttons above to get started.
+          Format: name,email,password,role (one user per line). Email must end with @fitt-iitd.in
         </p>
       </div>
 
-      <Button 
-        variant="outline" 
-        onClick={parseCsvText}
-        disabled={!csvText.trim()}
-        className="w-full"
-      >
-        Parse CSV Data ({csvText.trim().split('\n').filter(line => line.trim()).length} lines)
-      </Button>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={parseCsvText} disabled={!csvText.trim()}>
+          Parse CSV
+        </Button>
+      </div>
     </div>
   );
 };

@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, Users } from 'lucide-react';
+import { UserPlus, Users, AlertCircle } from 'lucide-react';
 import { useUserManagement } from '@/hooks/useUserManagement';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const SimpleUserManagement = () => {
   const { createUser, isCreating } = useUserManagement();
@@ -18,10 +19,34 @@ const SimpleUserManagement = () => {
     role: 'bidder' as 'admin' | 'bidder'
   });
 
+  const [emailError, setEmailError] = useState('');
+
+  const validateEmail = (email: string) => {
+    if (!email.endsWith('@fitt-iitd.in')) {
+      setEmailError('Only @fitt-iitd.in email addresses are allowed');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const handleEmailChange = (email: string) => {
+    setFormData({ ...formData, email });
+    if (email) {
+      validateEmail(email);
+    } else {
+      setEmailError('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.email || !formData.password) {
+      return;
+    }
+
+    if (!validateEmail(formData.email)) {
       return;
     }
 
@@ -35,6 +60,7 @@ const SimpleUserManagement = () => {
         password: '',
         role: 'bidder'
       });
+      setEmailError('');
     }
   };
 
@@ -74,6 +100,13 @@ const SimpleUserManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Email Restriction:</strong> Only email addresses ending with @fitt-iitd.in are allowed for user creation.
+            </AlertDescription>
+          </Alert>
+
           {/* Quick test users button */}
           <div className="p-4 bg-slate-50 rounded-lg">
             <h4 className="font-medium mb-2">Quick Setup</h4>
@@ -108,10 +141,17 @@ const SimpleUserManagement = () => {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="john@example.com"
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  placeholder="john@fitt-iitd.in"
                   required
+                  className={emailError ? 'border-red-500' : ''}
                 />
+                {emailError && (
+                  <p className="text-sm text-red-500 mt-1">{emailError}</p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Must end with @fitt-iitd.in
+                </p>
               </div>
             </div>
             
@@ -146,7 +186,7 @@ const SimpleUserManagement = () => {
 
             <Button 
               type="submit"
-              disabled={isCreating || !formData.name || !formData.email || !formData.password}
+              disabled={isCreating || !formData.name || !formData.email || !formData.password || !!emailError}
               className="w-full"
             >
               {isCreating ? 'Creating...' : (
