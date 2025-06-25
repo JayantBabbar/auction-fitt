@@ -260,6 +260,20 @@ export type Database = {
           bid_time: string
         }[]
       }
+      get_temp_passwords: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          user_id: string
+          user_email: string
+          user_name: string
+          temporary_password: string
+          created_by: string
+          created_at: string
+          expires_at: string
+          password_used: boolean
+        }[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]

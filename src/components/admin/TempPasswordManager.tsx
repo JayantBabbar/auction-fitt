@@ -26,8 +26,8 @@ const TempPasswordManager = () => {
   const { data: tempPasswords = [], isLoading, refetch } = useQuery({
     queryKey: ['temp-passwords'],
     queryFn: async () => {
-      // Use rpc to call a function that returns temp passwords
-      const { data, error } = await supabase.rpc('get_temp_passwords');
+      // Use rpc to call the get_temp_passwords function
+      const { data, error } = await (supabase as any).rpc('get_temp_passwords');
       
       if (error) {
         // If the function doesn't exist, try direct query with type assertion
@@ -41,7 +41,7 @@ const TempPasswordManager = () => {
         return directData as TempPassword[];
       }
       
-      return data as TempPassword[];
+      return (data || []) as TempPassword[];
     }
   });
 
