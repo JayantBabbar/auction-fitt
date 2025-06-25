@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSecureCreateAuction } from '@/hooks/useSecureAuctions';
 import { ImageUpload } from '@/components/ImageUpload';
 import { Button } from '@/components/ui/button';
@@ -80,7 +80,7 @@ const getAuctionStatus = (startTime: Date, endTime: Date): 'draft' | 'upcoming' 
 
 const CreateAuction = () => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile } = useSupabaseAuth();
   const { toast } = useToast();
   const createAuctionMutation = useSecureCreateAuction();
   const [imageUrls, setImageUrls] = useState<string[]>([]);

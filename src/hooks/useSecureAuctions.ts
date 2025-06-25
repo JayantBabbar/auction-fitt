@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { validateAuctionTitle, validateAuctionDescription } from '@/utils/inputValidation';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -11,7 +11,7 @@ type AuctionInsert = Database['public']['Tables']['auctions']['Insert'];
 export const useSecureCreateAuction = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user, profile } = useAuth();
+  const { user, profile } = useSupabaseAuth();
   
   return useMutation({
     mutationFn: async (auction: AuctionInsert) => {
