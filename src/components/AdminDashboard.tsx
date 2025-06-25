@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useAuctions } from '@/hooks/useAuctions';
 import { Button } from '@/components/ui/button';
 import AdminHeader from './admin/AdminHeader';
@@ -10,7 +10,7 @@ import AdminTabs from './admin/AdminTabs';
 import { Loader2, AlertCircle, Plus } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const { profile, signOut } = useSimpleAuth();
+  const { profile, signOut } = useSupabaseAuth();
   const navigate = useNavigate();
   const { data: auctions = [], isLoading, error } = useAuctions();
 
