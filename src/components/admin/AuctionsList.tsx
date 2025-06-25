@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,8 @@ interface AuctionsListProps {
 }
 
 const AuctionsList = ({ auctions = [] }: AuctionsListProps) => {
+  const navigate = useNavigate();
+
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'active':
@@ -41,6 +44,10 @@ const AuctionsList = ({ auctions = [] }: AuctionsListProps) => {
     return `${hours}h ${minutes}m`;
   };
 
+  const handleViewAuction = (auctionId: string) => {
+    navigate(`/admin/auction/${auctionId}`);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -55,7 +62,7 @@ const AuctionsList = ({ auctions = [] }: AuctionsListProps) => {
               <Gavel className="h-12 w-12 text-slate-400 mx-auto mb-4" />
               <p className="text-slate-500 font-medium">No auctions found</p>
               <p className="text-sm text-slate-400 mt-1">Create your first auction to get started</p>
-              <Button className="mt-4" onClick={() => window.location.href = '/create-auction'}>
+              <Button className="mt-4" onClick={() => navigate('/create-auction')}>
                 Create Auction
               </Button>
             </CardContent>
@@ -76,9 +83,13 @@ const AuctionsList = ({ auctions = [] }: AuctionsListProps) => {
                       Auction ID: {auction.id}
                     </CardDescription>
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewAuction(auction.id)}
+                  >
                     <Eye className="h-4 w-4 mr-2" />
-                    View
+                    View Details
                   </Button>
                 </div>
               </CardHeader>
