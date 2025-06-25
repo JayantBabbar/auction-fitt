@@ -14,7 +14,17 @@ export const useBulkUserCreation = () => {
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
 
+  const validateEmailDomain = (email: string): boolean => {
+    return email.toLowerCase().endsWith('@fitt-iitd.in');
+  };
+
   const createUserWithSupabase = async (user: User): Promise<boolean> => {
+    // Client-side email validation
+    if (!validateEmailDomain(user.email)) {
+      console.error(`Invalid email domain for ${user.email}. Only @fitt-iitd.in emails are allowed.`);
+      return false;
+    }
+
     try {
       console.log(`Attempting to create user: ${user.email}`);
       
@@ -64,7 +74,33 @@ export const useBulkUserCreation = () => {
       return false;
     }
 
-    console.log(`Starting bulk creation of ${users.length} users...`);
+    // Filter out users with invalid email domains
+    const validUsers = users.filter(user => {
+      if (!validateEmailDomain(user.email)) {
+        console.warn(`Filtering out user with invalid email domain: ${user.email}`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validUsers.length === 0) {
+      toast({
+        title: "No Valid Users",
+        description: "All users have invalid email domains. Only @fitt-iitd.in emails are allowed.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (validUsers.length < users.length) {
+      toast({
+        title: "Invalid Emails Filtered",
+        description: `${users.length - validUsers.length} users with invalid email domains were filtered out.`,
+        variant: "destructive",
+      });
+    }
+
+    console.log(`Starting bulk creation of ${validUsers.length} valid users...`);
     setIsCreating(true);
     
     let successCount = 0;
@@ -72,9 +108,9 @@ export const useBulkUserCreation = () => {
     const errors: string[] = [];
 
     try {
-      for (let i = 0; i < users.length; i++) {
-        const user = users[i];
-        console.log(`Processing user ${i + 1}/${users.length}: ${user.email}`);
+      for (let i = 0; i < validUsers.length; i++) {
+        const user = validUsers[i];
+        console.log(`Processing user ${i + 1}/${validUsers.length}: ${user.email}`);
         
         const success = await createUserWithSupabase(user);
         if (success) {
@@ -121,6 +157,7 @@ export const useBulkUserCreation = () => {
 
   return {
     isCreating,
-    handleBulkUserCreation
+    handleBulkUserCreation,
+    validateEmailDomain
   };
 };

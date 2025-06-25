@@ -225,6 +225,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_user: {
+        Args: {
+          user_email: string
+          user_name: string
+          user_role?: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: Json
+      }
       can_user_bid: {
         Args: { user_id: string }
         Returns: boolean
@@ -251,6 +259,14 @@ export type Database = {
           highest_bid: number
           bid_time: string
         }[]
+      }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
       }
       is_valid_email_domain: {
         Args: { email: string }

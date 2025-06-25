@@ -21,37 +21,39 @@ export const useUserManagement = () => {
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
 
+  const validateEmailDomain = (email: string): boolean => {
+    return email.toLowerCase().endsWith('@fitt-iitd.in');
+  };
+
   const createUser = async (userData: CreateUserData): Promise<boolean> => {
+    // Client-side email validation
+    if (!validateEmailDomain(userData.email)) {
+      toast({
+        title: "Invalid Email Domain",
+        description: "Only @fitt-iitd.in email addresses are allowed",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     setIsCreating(true);
     
     try {
       console.log('Creating user via Supabase function:', { ...userData });
       
-      // Check if the admin_create_user function exists
-      const { data, error } = await supabase.rpc('admin_create_user' as any, {
-        user_email: userData.email,
+      const { data, error } = await supabase.rpc('admin_create_user', {
+        user_email: userData.email.toLowerCase().trim(),
         user_name: userData.name,
         user_role: userData.role
       });
 
       if (error) {
         console.error('Supabase function error:', error);
-        
-        // Check if it's a function not found error
-        if (error.message?.includes('function') && error.message?.includes('does not exist')) {
-          toast({
-            title: "Database Setup Required",
-            description: "Please run the migration files first. The admin_create_user function is not available yet.",
-            variant: "destructive",
-            duration: 8000,
-          });
-        } else {
-          toast({
-            title: "Error Creating User",
-            description: error.message || 'Failed to create user',
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Error Creating User",
+          description: error.message || 'Failed to create user',
+          variant: "destructive",
+        });
         return false;
       }
 
@@ -78,10 +80,9 @@ export const useUserManagement = () => {
     } catch (error) {
       console.error('Unexpected error creating user:', error);
       toast({
-        title: "Database Setup Required",
-        description: "Please run the migration files in your Supabase project first. Check the console for details.",
+        title: "Error Creating User",
+        description: "An unexpected error occurred. Check the console for details.",
         variant: "destructive",
-        duration: 8000,
       });
       return false;
     } finally {
@@ -90,9 +91,35 @@ export const useUserManagement = () => {
   };
 
   const createBulkUsers = async (users: CreateUserData[]): Promise<number> => {
+    // Filter out invalid email domains before processing
+    const validUsers = users.filter(user => {
+      if (!validateEmailDomain(user.email)) {
+        console.warn(`Skipping user with invalid email domain: ${user.email}`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validUsers.length === 0) {
+      toast({
+        title: "No Valid Users",
+        description: "All users have invalid email domains. Only @fitt-iitd.in emails are allowed.",
+        variant: "destructive",
+      });
+      return 0;
+    }
+
+    if (validUsers.length < users.length) {
+      toast({
+        title: "Invalid Emails Filtered",
+        description: `${users.length - validUsers.length} users with invalid email domains were skipped.`,
+        variant: "destructive",
+      });
+    }
+
     let successCount = 0;
     
-    for (const user of users) {
+    for (const user of validUsers) {
       const success = await createUser(user);
       if (success) {
         successCount++;
@@ -107,6 +134,7 @@ export const useUserManagement = () => {
   return {
     createUser,
     createBulkUsers,
-    isCreating
+    isCreating,
+    validateEmailDomain
   };
 };
