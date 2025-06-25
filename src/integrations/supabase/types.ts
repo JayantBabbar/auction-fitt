@@ -239,6 +239,10 @@ export type Database = {
           bid_timestamp: string
         }[]
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_highest_bidder: {
         Args: { p_auction_id: string }
         Returns: {

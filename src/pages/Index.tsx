@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import LoginForm from '@/components/LoginForm';
+import SupabaseLoginForm from '@/components/SupabaseLoginForm';
 import AdminDashboard from '@/components/AdminDashboard';
 import BidderDashboard from '@/components/BidderDashboard';
 
@@ -21,7 +21,7 @@ const Index = () => {
 
   // Show login form if not authenticated
   if (!user || !profile) {
-    return <LoginForm />;
+    return <SupabaseLoginForm />;
   }
 
   // Show appropriate dashboard based on role
