@@ -1,65 +1,62 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { Users, TrendingUp } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AuctionsList from './AuctionsList';
-import SimpleUserManagement from './SimpleUserManagement';
+import UserCreation from './UserCreation';
+import TempPasswordManager from './TempPasswordManager';
+import { BarChart3, Gavel, Users, Key } from 'lucide-react';
 
 interface AdminTabsProps {
-  auctions?: any[];
+  auctions: any[];
 }
 
 const AdminTabs = ({ auctions }: AdminTabsProps) => {
   return (
     <Tabs defaultValue="auctions" className="space-y-6">
-      <div className="flex items-center justify-between">
-        <TabsList className="grid grid-cols-4 lg:w-[500px] bg-white border border-slate-200">
-          <TabsTrigger value="auctions" className="data-[state=active]:bg-slate-100">Auctions</TabsTrigger>
-          <TabsTrigger value="users" className="data-[state=active]:bg-slate-100">Users</TabsTrigger>
-          <TabsTrigger value="bidders" className="data-[state=active]:bg-slate-100">Bidders</TabsTrigger>
-          <TabsTrigger value="reports" className="data-[state=active]:bg-slate-100">Reports</TabsTrigger>
-        </TabsList>
-      </div>
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="auctions" className="flex items-center gap-2">
+          <Gavel className="h-4 w-4" />
+          Auctions
+        </TabsTrigger>
+        <TabsTrigger value="analytics" className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" />
+          Analytics
+        </TabsTrigger>
+        <TabsTrigger value="users" className="flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          User Management
+        </TabsTrigger>
+        <TabsTrigger value="passwords" className="flex items-center gap-2">
+          <Key className="h-4 w-4" />
+          Temp Passwords
+        </TabsTrigger>
+      </TabsList>
 
-      <TabsContent value="auctions" className="space-y-6">
+      <TabsContent value="auctions">
         <AuctionsList auctions={auctions} />
       </TabsContent>
 
-      <TabsContent value="users" className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-serif font-semibold text-slate-900">User Management</h2>
-          <p className="text-slate-600 mt-1">Create and manage user accounts</p>
-        </div>
-        <SimpleUserManagement />
-      </TabsContent>
-
-      <TabsContent value="bidders" className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-serif font-semibold text-slate-900">Bidder Management</h2>
-          <p className="text-slate-600 mt-1">Monitor and manage bidder activities</p>
-        </div>
-        <Card className="border-slate-200/60 bg-white/70">
-          <CardContent className="p-8 text-center">
-            <Users className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-500 font-medium">Bidder management features coming soon...</p>
-            <p className="text-sm text-slate-400 mt-1">Advanced user analytics and management tools</p>
+      <TabsContent value="analytics">
+        <Card>
+          <CardHeader>
+            <CardTitle>Analytics & Reports</CardTitle>
+            <CardDescription>
+              Detailed insights and performance metrics
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">Analytics dashboard coming soon...</p>
           </CardContent>
         </Card>
       </TabsContent>
 
-      <TabsContent value="reports" className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-serif font-semibold text-slate-900">Analytics & Reports</h2>
-          <p className="text-slate-600 mt-1">Comprehensive insights and performance metrics</p>
-        </div>
-        <Card className="border-slate-200/60 bg-white/70">
-          <CardContent className="p-8 text-center">
-            <TrendingUp className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-500 font-medium">Advanced reporting features coming soon...</p>
-            <p className="text-sm text-slate-400 mt-1">Real-time analytics and detailed performance reports</p>
-          </CardContent>
-        </Card>
+      <TabsContent value="users">
+        <UserCreation />
+      </TabsContent>
+
+      <TabsContent value="passwords">
+        <TempPasswordManager />
       </TabsContent>
     </Tabs>
   );
