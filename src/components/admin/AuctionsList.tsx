@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Gavel, Clock, DollarSign, Eye } from 'lucide-react';
+import AuctionActions from './AuctionActions';
 
 interface AuctionsListProps {
   auctions?: any[];
@@ -83,14 +84,17 @@ const AuctionsList = ({ auctions = [] }: AuctionsListProps) => {
                       Auction ID: {auction.id}
                     </CardDescription>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleViewAuction(auction.id)}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Details
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewAuction(auction.id)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                    <AuctionActions auction={auction} />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
