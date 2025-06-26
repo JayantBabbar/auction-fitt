@@ -40,6 +40,7 @@ const AuctionCard = ({
   canBid = true
 }: AuctionCardProps) => {
   const [showWarning, setShowWarning] = useState(false);
+  const [imageError, setImageError] = useState<{[key: string]: boolean}>({});
 
   const calculateMinNextBid = () => {
     return (auction.current_bid || auction.starting_bid) + auction.bid_increment;
@@ -97,47 +98,52 @@ const AuctionCard = ({
   };
 
   const getDisplayImage = () => {
+    // First, try to use uploaded images
     if (auction.image_urls && auction.image_urls.length > 0) {
-      return auction.image_urls[0];
+      const firstImage = auction.image_urls[0];
+      // Check if this image has errored before
+      if (!imageError[firstImage]) {
+        return firstImage;
+      }
     }
     
-    // Return placeholder image based on category
+    // Fallback to placeholder image based on category
     const category = auction.category.toLowerCase();
     if (category.includes('laptop') || category.includes('computer')) {
-      return 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b';
+      return 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=300&fit=crop';
     }
     if (category.includes('tech') || category.includes('electronic')) {
-      return 'https://images.unsplash.com/photo-1518770660439-4636190af475';
+      return 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=300&fit=crop';
     }
     if (category.includes('programming') || category.includes('software')) {
-      return 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6';
+      return 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop';
     }
     
     // Default placeholder
-    return 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d';
+    return 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop';
+  };
+
+  const handleImageError = (imageUrl: string) => {
+    console.error('Image failed to load:', imageUrl);
+    setImageError(prev => ({ ...prev, [imageUrl]: true }));
   };
 
   const currentBid = auction.current_bid || auction.starting_bid;
   const minNextBid = calculateMinNextBid();
+  const displayImage = getDisplayImage();
 
   return (
     <>
       <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
         <div className="md:flex">
           <div className="md:w-48 h-48 bg-muted flex items-center justify-center overflow-hidden">
-            {auction.image_urls && auction.image_urls.length > 0 ? (
-              <img 
-                src={getDisplayImage()} 
-                alt={auction.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img 
-                src={getDisplayImage()} 
-                alt={`${auction.title} placeholder`}
-                className="w-full h-full object-cover opacity-75"
-              />
-            )}
+            <img 
+              src={displayImage}
+              alt={auction.title}
+              className="w-full h-full object-cover"
+              onError={() => handleImageError(displayImage)}
+              onLoad={() => console.log('Image loaded successfully:', displayImage)}
+            />
           </div>
           
           <div className="flex-1 p-6">

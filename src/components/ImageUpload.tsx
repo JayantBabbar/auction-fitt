@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useUploadAuctionImage } from '@/hooks/useAuctions';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 
@@ -19,8 +19,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   existingImages = []
 }) => {
   const [uploadedImages, setUploadedImages] = useState<string[]>(existingImages);
-  const [uploading, setUploading] = useState(false);
-  const uploadMutation = useUploadAuctionImage();
+  const { uploadImage, uploading } = useImageUpload();
   const { toast } = useToast();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -33,23 +32,26 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       return;
     }
 
-    setUploading(true);
     const newUrls: string[] = [];
 
     try {
       for (const file of acceptedFiles) {
-        const result = await uploadMutation.mutateAsync({ file });
-        newUrls.push(result.url);
+        const url = await uploadImage(file);
+        if (url) {
+          newUrls.push(url);
+        }
       }
 
       const updatedImages = [...uploadedImages, ...newUrls];
       setUploadedImages(updatedImages);
       onImagesChange(updatedImages);
 
-      toast({
-        title: "Images uploaded",
-        description: `${newUrls.length} image(s) uploaded successfully.`,
-      });
+      if (newUrls.length > 0) {
+        toast({
+          title: "Images uploaded",
+          description: `${newUrls.length} image(s) uploaded successfully.`,
+        });
+      }
     } catch (error) {
       console.error('Upload error:', error);
       toast({
@@ -57,10 +59,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         description: "Failed to upload images. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setUploading(false);
     }
-  }, [uploadedImages, maxImages, uploadMutation, onImagesChange, toast]);
+  }, [uploadedImages, maxImages, uploadImage, onImagesChange, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -143,6 +143,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                         src={url}
                         alt={`Upload ${index + 1}`}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('Image failed to load:', url);
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d';
+                        }}
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                       
