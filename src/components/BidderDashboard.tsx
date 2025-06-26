@@ -16,12 +16,49 @@ const BidderDashboard = () => {
   const { data: canBid = true } = useCanUserBid();
   const placeBidMutation = usePlaceBid();
   
-  // Filter to show only active auctions that have started
+  // Helper function to check if auction should be active
+  const shouldAuctionBeActive = (auction: any) => {
+    const now = new Date();
+    const startTime = auction.start_time ? new Date(auction.start_time) : null;
+    const endTime = auction.end_time ? new Date(auction.end_time) : null;
+    
+    console.log(`Auction ${auction.id} (${auction.title}):`, {
+      status: auction.status,
+      startTime: startTime?.toISOString(),
+      endTime: endTime?.toISOString(),
+      now: now.toISOString(),
+      hasStarted: startTime ? startTime <= now : true,
+      hasEnded: endTime ? endTime <= now : false
+    });
+    
+    // If no start time, consider it started
+    if (!startTime) return auction.status === 'active';
+    
+    // If has start time, check if it's passed and auction hasn't ended
+    const hasStarted = startTime <= now;
+    const hasEnded = endTime ? endTime <= now : false;
+    
+    return hasStarted && !hasEnded && auction.status !== 'cancelled';
+  };
+
+  // Filter to show only auctions that should be active and visible to bidders
   const activeAuctions = auctions.filter(auction => {
-    const isActive = auction.status === 'active';
-    const hasStarted = !auction.start_time || new Date(auction.start_time) <= new Date();
-    return isActive && hasStarted;
+    console.log(`Filtering auction ${auction.id}:`, {
+      title: auction.title,
+      status: auction.status,
+      shouldBeActive: shouldAuctionBeActive(auction)
+    });
+    
+    return shouldAuctionBeActive(auction);
   });
+  
+  console.log('Active auctions for display:', activeAuctions.map(a => ({
+    id: a.id,
+    title: a.title,
+    status: a.status,
+    start_time: a.start_time,
+    end_time: a.end_time
+  })));
   
   const [bidAmounts, setBidAmounts] = useState<{[key: string]: string}>({});
 

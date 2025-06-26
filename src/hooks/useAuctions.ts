@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -48,6 +47,26 @@ export const useAuctions = () => {
         console.error('Error fetching auctions:', error);
         throw error;
       }
+
+      // Add detailed logging for auction timing analysis
+      const now = new Date();
+      console.log('Current time:', now.toISOString());
+      
+      data?.forEach(auction => {
+        const startTime = auction.start_time ? new Date(auction.start_time) : null;
+        const endTime = auction.end_time ? new Date(auction.end_time) : null;
+        
+        console.log(`Auction Analysis - ${auction.title} (${auction.id}):`, {
+          status: auction.status,
+          start_time: auction.start_time,
+          end_time: auction.end_time,
+          startTime_parsed: startTime?.toISOString(),
+          endTime_parsed: endTime?.toISOString(),
+          hasStarted: startTime ? startTime <= now : 'no start time',
+          hasEnded: endTime ? endTime <= now : 'no end time',
+          shouldBeActive: startTime && startTime <= now && (!endTime || endTime > now) && auction.status !== 'cancelled'
+        });
+      });
 
       console.log('Auctions fetched from Supabase:', data);
       return data || [];
