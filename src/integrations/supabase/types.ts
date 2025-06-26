@@ -220,6 +220,42 @@ export type Database = {
         }
         Relationships: []
       }
+      temp_passwords: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          password_used: boolean
+          temporary_password: string
+          user_email: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          id?: string
+          password_used?: boolean
+          temporary_password: string
+          user_email: string
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          password_used?: boolean
+          temporary_password?: string
+          user_email?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

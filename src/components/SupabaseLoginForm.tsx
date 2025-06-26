@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Gavel, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import PasswordResetForm from './PasswordResetForm';
 
 const SupabaseLoginForm = () => {
   const [email, setEmail] = useState('');
@@ -15,8 +16,18 @@ const SupabaseLoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const { signIn } = useSupabaseAuth();
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [userNeedsPasswordReset, setUserNeedsPasswordReset] = useState(false);
+  const { signIn, profile } = useSupabaseAuth();
   const { toast } = useToast();
+
+  // Check if user needs password reset after successful login
+  useEffect(() => {
+    if (profile && profile.password_reset_required) {
+      setShowPasswordReset(true);
+      setUserNeedsPasswordReset(true);
+    }
+  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +57,7 @@ const SupabaseLoginForm = () => {
           title: "Login Successful",
           description: "Welcome back!",
         });
+        // The useEffect will handle showing password reset if needed
       }
     } catch (error) {
       console.error('Unexpected login error:', error);
@@ -108,6 +120,20 @@ const SupabaseLoginForm = () => {
     setEmail(testEmail);
     setPassword(testPassword);
   };
+
+  const handlePasswordChanged = () => {
+    setShowPasswordReset(false);
+    setUserNeedsPasswordReset(false);
+    toast({
+      title: "Password Updated",
+      description: "You can now access the application normally.",
+    });
+  };
+
+  // Show password reset form if user needs to reset password
+  if (showPasswordReset && userNeedsPasswordReset) {
+    return <PasswordResetForm onPasswordChanged={handlePasswordChanged} />;
+  }
 
   if (showForgotPassword) {
     return (
