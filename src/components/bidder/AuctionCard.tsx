@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Clock, DollarSign, Users, Gavel } from 'lucide-react';
+import { Clock, DollarSign, Users, Gavel, Image as ImageIcon } from 'lucide-react';
 import { useUserBids } from '@/hooks/useBids';
 import BidActions from './BidActions';
 
@@ -70,10 +70,13 @@ const AuctionCard = ({
   // Check if bidding is allowed
   const canPlaceBid = canBid && auction.status === 'active' && !auctionEnded;
 
+  // Get the primary image or first available image
+  const primaryImage = auction.image_urls && auction.image_urls.length > 0 ? auction.image_urls[0] : null;
+
   return (
     <Card className="border-slate-200/60 shadow-sm bg-white/70 backdrop-blur-sm">
       <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <CardTitle className="text-xl mb-2">{auction.title}</CardTitle>
             <p className="text-sm text-slate-600 mb-3">{auction.description}</p>
@@ -95,6 +98,26 @@ const AuctionCard = ({
                 </span>
               </div>
             </div>
+          </div>
+          
+          {/* Auction Image */}
+          <div className="flex-shrink-0">
+            {primaryImage ? (
+              <div className="w-24 h-24 rounded-lg overflow-hidden border border-slate-200">
+                <img
+                  src={primaryImage}
+                  alt={auction.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200&h=200&fit=crop';
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="w-24 h-24 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center">
+                <ImageIcon className="h-8 w-8 text-slate-400" />
+              </div>
+            )}
           </div>
           
           {/* Status Badges */}

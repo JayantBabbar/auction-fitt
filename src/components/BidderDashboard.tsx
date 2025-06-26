@@ -16,8 +16,12 @@ const BidderDashboard = () => {
   const { data: canBid = true } = useCanUserBid();
   const placeBidMutation = usePlaceBid();
   
-  // Filter to show only active auctions
-  const activeAuctions = auctions.filter(auction => auction.status === 'active');
+  // Filter to show only active auctions that have started
+  const activeAuctions = auctions.filter(auction => {
+    const isActive = auction.status === 'active';
+    const hasStarted = !auction.start_time || new Date(auction.start_time) <= new Date();
+    return isActive && hasStarted;
+  });
   
   const [bidAmounts, setBidAmounts] = useState<{[key: string]: string}>({});
 
@@ -118,6 +122,9 @@ const BidderDashboard = () => {
           {activeAuctions.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg">No active auctions available at the moment.</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Auctions will appear here once they start and are active.
+              </p>
             </div>
           ) : (
             <div className="grid gap-6">
