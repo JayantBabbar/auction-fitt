@@ -51,12 +51,6 @@ const SimpleLoginForm = () => {
     }
   };
 
-  const handleTestLogin = (testEmail: string, testPassword: string) => {
-    console.log('Setting test credentials:', { email: testEmail, passwordLength: testPassword.length });
-    setEmail(testEmail);
-    setPassword(testPassword);
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="w-full max-w-md">
@@ -129,30 +123,6 @@ const SimpleLoginForm = () => {
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
-
-            <div className="pt-4 border-t">
-              <p className="text-sm text-muted-foreground mb-3 text-center">Test Accounts:</p>
-              <div className="space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => handleTestLogin('admin@fitt-iitd.in', 'admin123')}
-                >
-                  Login as Admin
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => handleTestLogin('Abhishek@fitt-iitd.in', 'J5b|>)Vdn\\cj')}
-                >
-                  Login as Bidder (Abhishek)
-                </Button>
-              </div>
-            </div>
 
             <div className="pt-2 text-xs text-gray-500 text-center">
               <p className="text-green-600 font-medium">🔓 Authentication Bypass Mode Active</p>

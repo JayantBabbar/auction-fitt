@@ -115,12 +115,6 @@ const SupabaseLoginForm = () => {
     }
   };
 
-  const handleTestLogin = (testEmail: string, testPassword: string) => {
-    console.log('Setting test credentials:', { email: testEmail, passwordLength: testPassword.length });
-    setEmail(testEmail);
-    setPassword(testPassword);
-  };
-
   const handlePasswordChanged = () => {
     setShowPasswordReset(false);
     setUserNeedsPasswordReset(false);
@@ -284,37 +278,6 @@ const SupabaseLoginForm = () => {
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
-
-            <div className="pt-4 border-t">
-              <p className="text-sm text-muted-foreground mb-3 text-center">Test Accounts:</p>
-              <div className="space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => handleTestLogin('admin@fitt-iitd.in', 'admin123')}
-                >
-                  Login as Admin
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => handleTestLogin('Abhishek@fitt-iitd.in', 'J5b|>)Vdn\\cj')}
-                >
-                  Login as Bidder (Abhishek)
-                </Button>
-              </div>
-            </div>
-
-            {/* Debug info */}
-            <div className="pt-2 text-xs text-gray-500">
-              <p>Debug: Email confirmation should be disabled in Supabase settings</p>
-              <p>Current email: {email}</p>
-              <p>Password length: {password.length}</p>
-            </div>
           </CardContent>
         </Card>
       </div>

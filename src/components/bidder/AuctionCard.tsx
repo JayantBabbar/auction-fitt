@@ -55,11 +55,20 @@ const AuctionCard = ({
     return (auction.current_bid || auction.starting_bid) + auction.bid_increment;
   };
 
+  const isAuctionEnded = () => {
+    if (!auction.end_time) return false;
+    return new Date(auction.end_time) < new Date();
+  };
+
   const minNextBid = calculateMinNextBid();
   const timeRemaining = formatTimeRemaining(auction.end_time);
+  const auctionEnded = isAuctionEnded();
   
   // Get user's bid for this auction
   const userBidForAuction = userBids.find(bid => bid.auction_id === auction.id);
+
+  // Check if bidding is allowed
+  const canPlaceBid = canBid && auction.status === 'active' && !auctionEnded;
 
   return (
     <Card className="border-slate-200/60 shadow-sm bg-white/70 backdrop-blur-sm">
@@ -81,19 +90,26 @@ const AuctionCard = ({
               </div>
               <div className="flex items-center gap-1 text-slate-500">
                 <Clock className="h-3 w-3" />
-                <span>{timeRemaining}</span>
+                <span className={auctionEnded ? 'text-red-600 font-semibold' : ''}>
+                  {timeRemaining}
+                </span>
               </div>
             </div>
           </div>
           
           {/* Status Badges */}
           <div className="flex flex-col gap-2 items-end">
-            {isLeading && (
+            {auctionEnded && (
+              <Badge variant="destructive">
+                Ended
+              </Badge>
+            )}
+            {isLeading && !auctionEnded && (
               <Badge className="bg-green-100 text-green-800">
                 Leading
               </Badge>
             )}
-            {myBid && !isLeading && (
+            {myBid && !isLeading && !auctionEnded && (
               <Badge variant="outline">
                 Your bid: ₹{myBid.toLocaleString()}
               </Badge>
@@ -126,53 +142,65 @@ const AuctionCard = ({
           </div>
         )}
 
-        {/* Bidding Section */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Gavel className="h-4 w-4 text-slate-500" />
-            <span className="text-sm text-slate-600">
-              Minimum bid: ₹{minNextBid.toLocaleString()}
-            </span>
-          </div>
-          
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              placeholder={`Min ₹${minNextBid.toLocaleString()}`}
-              value={bidAmount}
-              onChange={(e) => onBidChange(e.target.value)}
-              min={minNextBid}
-              step={auction.bid_increment}
-              className="flex-1"
-            />
-            <Button
-              variant="outline"
-              onClick={onQuickBid}
-              disabled={!canBid}
-            >
-              Quick Bid
-            </Button>
-          </div>
-          
-          <Button 
-            onClick={onPlaceBid}
-            disabled={
-              !canBid || 
-              !bidAmount || 
-              parseFloat(bidAmount) < minNextBid || 
-              isPlacingBid
-            }
-            className="w-full"
-          >
-            {isPlacingBid ? 'Placing Bid...' : `Place Bid ₹${bidAmount ? parseFloat(bidAmount).toLocaleString() : '0'}`}
-          </Button>
-          
-          {!canBid && (
-            <p className="text-xs text-amber-600 text-center">
-              You cannot bid for 24 hours after winning an auction
+        {/* Auction Ended Message */}
+        {auctionEnded && (
+          <div className="mb-4 p-3 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-sm font-medium text-red-900">
+              🔒 This auction has ended. No more bids can be placed.
             </p>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Bidding Section */}
+        {!auctionEnded && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Gavel className="h-4 w-4 text-slate-500" />
+              <span className="text-sm text-slate-600">
+                Minimum bid: ₹{minNextBid.toLocaleString()}
+              </span>
+            </div>
+            
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                placeholder={`Min ₹${minNextBid.toLocaleString()}`}
+                value={bidAmount}
+                onChange={(e) => onBidChange(e.target.value)}
+                min={minNextBid}
+                step={auction.bid_increment}
+                className="flex-1"
+                disabled={!canPlaceBid}
+              />
+              <Button
+                variant="outline"
+                onClick={onQuickBid}
+                disabled={!canPlaceBid}
+              >
+                Quick Bid
+              </Button>
+            </div>
+            
+            <Button 
+              onClick={onPlaceBid}
+              disabled={
+                !canPlaceBid || 
+                !bidAmount || 
+                parseFloat(bidAmount) < minNextBid || 
+                isPlacingBid
+              }
+              className="w-full"
+            >
+              {isPlacingBid ? 'Placing Bid...' : `Place Bid ₹${bidAmount ? parseFloat(bidAmount).toLocaleString() : '0'}`}
+            </Button>
+            
+            {!canBid && !auctionEnded && (
+              <p className="text-xs text-amber-600 text-center">
+                You cannot bid for 24 hours after winning an auction
+              </p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

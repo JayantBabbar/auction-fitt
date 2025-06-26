@@ -42,10 +42,10 @@ export const useCancelBid = () => {
         throw new Error('Bid not found or you are not authorized to cancel this bid');
       }
 
-      // Get auction details to check if it's still active
+      // Get auction details to check if it's still active and if this is the highest bid
       const { data: auction, error: auctionError } = await supabase
         .from('auctions')
-        .select('status, current_bid')
+        .select('status, current_bid, end_time')
         .eq('id', auctionId)
         .single();
 
@@ -55,6 +55,11 @@ export const useCancelBid = () => {
 
       if (auction.status !== 'active') {
         throw new Error('Cannot cancel bid on inactive auction');
+      }
+
+      // Check if auction has ended
+      if (auction.end_time && new Date(auction.end_time) < new Date()) {
+        throw new Error('Cannot cancel bid after auction has ended');
       }
 
       // Check if this is the highest bid
@@ -78,6 +83,19 @@ export const useCancelBid = () => {
           errorMessage: deleteError.message
         });
         throw deleteError;
+      }
+
+      // Update auction bidder count (decrease by 1)
+      const { error: updateError } = await supabase
+        .from('auctions')
+        .update({ 
+          bidder_count: Math.max(0, (auction as any).bidder_count - 1),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', auctionId);
+
+      if (updateError) {
+        console.warn('Failed to update bidder count after bid cancellation:', updateError);
       }
 
       logSecurityEvent({
