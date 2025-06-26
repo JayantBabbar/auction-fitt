@@ -269,6 +269,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_delete_user: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       can_user_bid: {
         Args: { user_id: string }
         Returns: boolean

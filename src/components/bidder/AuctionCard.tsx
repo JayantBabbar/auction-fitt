@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -99,9 +100,11 @@ const AuctionCard = ({
   };
 
   const getDisplayImage = () => {
-    // First, try to use uploaded images
+    // First, try to use uploaded images from Supabase Storage
     if (auction.image_urls && auction.image_urls.length > 0) {
-      return auction.image_urls[0];
+      const imageUrl = auction.image_urls[0];
+      console.log('Using uploaded image URL:', imageUrl);
+      return imageUrl;
     }
     
     // Fallback to placeholder image based on category
@@ -159,6 +162,7 @@ const AuctionCard = ({
                 onError={handleImageError}
                 onLoad={handleImageLoad}
                 style={{ display: imageLoading ? 'none' : 'block' }}
+                crossOrigin="anonymous"
               />
             )}
           </div>

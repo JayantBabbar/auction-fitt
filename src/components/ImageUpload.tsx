@@ -36,8 +36,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     try {
       for (const file of acceptedFiles) {
+        console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
         const url = await uploadImage(file);
         if (url) {
+          console.log('Successfully uploaded, URL:', url);
           newUrls.push(url);
         }
       }
@@ -120,7 +122,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                     Drag & drop or click to select ({uploadedImages.length}/{maxImages})
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Supports: JPEG, PNG, WebP
+                    Supports: JPEG, PNG, WebP (max 5MB each)
                   </p>
                 </div>
               )}
@@ -143,9 +145,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                         src={url}
                         alt={`Upload ${index + 1}`}
                         className="w-full h-full object-cover"
+                        onLoad={() => console.log('Image loaded successfully:', url)}
                         onError={(e) => {
                           console.error('Image failed to load:', url);
-                          e.currentTarget.src = 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d';
+                          // Fallback to a default image
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop';
                         }}
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />

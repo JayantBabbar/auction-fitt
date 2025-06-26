@@ -11,37 +11,35 @@ export const useUserDeletion = () => {
     setIsDeleting(true);
     
     try {
-      console.log('Attempting to delete user:', userId);
+      console.log('Attempting to delete user via admin function:', userId);
       
-      // First, delete from temp_passwords table
-      const { error: tempPasswordError } = await supabase
-        .from('temp_passwords')
-        .delete()
-        .eq('user_id', userId);
+      // Use the new admin delete function
+      const { data, error } = await supabase.rpc('admin_delete_user', {
+        target_user_id: userId
+      });
 
-      if (tempPasswordError) {
-        console.error('Error deleting temp passwords:', tempPasswordError);
-      }
-
-      // Delete from profiles table (this should cascade to other tables)
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (profileError) {
-        console.error('Error deleting profile:', profileError);
+      if (error) {
+        console.error('Error calling admin_delete_user:', error);
         toast({
           title: "Error Deleting User",
-          description: `Failed to delete user profile: ${profileError.message}`,
+          description: `Failed to delete user: ${error.message}`,
           variant: "destructive",
         });
         return false;
       }
 
-      // Note: We cannot directly delete from auth.users table via the client
-      // This would need to be done via a server-side function or Supabase Admin API
-      console.log('User profile deleted successfully');
+      // Check the response from the function
+      if (data && !data.success) {
+        console.error('Admin delete function returned error:', data.error);
+        toast({
+          title: "Error Deleting User",
+          description: `Failed to delete user: ${data.error}`,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      console.log('User deleted successfully via admin function');
       
       toast({
         title: "User Deleted",
