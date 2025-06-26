@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useImageUpload = () => {
   const [uploading, setUploading] = useState(false);
@@ -21,12 +22,28 @@ export const useImageUpload = () => {
         throw new Error('File size must be less than 5MB.');
       }
 
-      // For now, create a local URL for the image
-      // In a real implementation, you would upload to Supabase Storage
-      const imageUrl = URL.createObjectURL(file);
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `auction-images/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('auction-images')
+        .upload(filePath, file);
+
+      if (error) {
+        console.error('Storage upload error:', error);
+        throw new Error(`Upload failed: ${error.message}`);
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('auction-images')
+        .getPublicUrl(filePath);
       
-      console.log('Image uploaded successfully:', imageUrl);
-      return imageUrl;
+      console.log('Image uploaded successfully:', publicUrl);
+      return publicUrl;
       
     } catch (error) {
       console.error('Image upload failed:', error);

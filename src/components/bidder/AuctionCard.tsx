@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,8 @@ import {
   DollarSign, 
   Crown, 
   AlertCircle,
-  Loader2
+  Loader2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import BidIncrementWarning from './BidIncrementWarning';
@@ -40,7 +40,8 @@ const AuctionCard = ({
   canBid = true
 }: AuctionCardProps) => {
   const [showWarning, setShowWarning] = useState(false);
-  const [imageError, setImageError] = useState<{[key: string]: boolean}>({});
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
   const calculateMinNextBid = () => {
     return (auction.current_bid || auction.starting_bid) + auction.bid_increment;
@@ -100,11 +101,7 @@ const AuctionCard = ({
   const getDisplayImage = () => {
     // First, try to use uploaded images
     if (auction.image_urls && auction.image_urls.length > 0) {
-      const firstImage = auction.image_urls[0];
-      // Check if this image has errored before
-      if (!imageError[firstImage]) {
-        return firstImage;
-      }
+      return auction.image_urls[0];
     }
     
     // Fallback to placeholder image based on category
@@ -123,9 +120,16 @@ const AuctionCard = ({
     return 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop';
   };
 
-  const handleImageError = (imageUrl: string) => {
-    console.error('Image failed to load:', imageUrl);
-    setImageError(prev => ({ ...prev, [imageUrl]: true }));
+  const handleImageError = () => {
+    console.error('Image failed to load:', getDisplayImage());
+    setImageError(true);
+    setImageLoading(false);
+  };
+
+  const handleImageLoad = () => {
+    console.log('Image loaded successfully:', getDisplayImage());
+    setImageLoading(false);
+    setImageError(false);
   };
 
   const currentBid = auction.current_bid || auction.starting_bid;
@@ -136,14 +140,27 @@ const AuctionCard = ({
     <>
       <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
         <div className="md:flex">
-          <div className="md:w-48 h-48 bg-muted flex items-center justify-center overflow-hidden">
-            <img 
-              src={displayImage}
-              alt={auction.title}
-              className="w-full h-full object-cover"
-              onError={() => handleImageError(displayImage)}
-              onLoad={() => console.log('Image loaded successfully:', displayImage)}
-            />
+          <div className="md:w-48 h-48 bg-muted flex items-center justify-center overflow-hidden relative">
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            {imageError ? (
+              <div className="flex flex-col items-center justify-center text-muted-foreground">
+                <ImageIcon className="h-8 w-8 mb-2" />
+                <span className="text-xs">Image unavailable</span>
+              </div>
+            ) : (
+              <img 
+                src={displayImage}
+                alt={auction.title}
+                className="w-full h-full object-cover"
+                onError={handleImageError}
+                onLoad={handleImageLoad}
+                style={{ display: imageLoading ? 'none' : 'block' }}
+              />
+            )}
           </div>
           
           <div className="flex-1 p-6">

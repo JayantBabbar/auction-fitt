@@ -120,14 +120,29 @@ export const useUploadAuctionImage = () => {
           throw new Error('File size must be less than 5MB.');
         }
 
-        console.log('Mock image upload for file:', file.name);
+        console.log('Uploading image to Supabase storage:', file.name);
         
-        // Mock image upload - return a placeholder URL
-        const mockUrl = `https://images.unsplash.com/photo-${Date.now()}`;
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Generate unique filename
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `auction-images/${fileName}`;
 
-        return { url: mockUrl, path: `mock/${file.name}` };
+        // Upload to Supabase Storage
+        const { data, error } = await supabase.storage
+          .from('auction-images')
+          .upload(filePath, file);
+
+        if (error) {
+          console.error('Storage upload error:', error);
+          throw new Error(`Upload failed: ${error.message}`);
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('auction-images')
+          .getPublicUrl(filePath);
+
+        return { url: publicUrl, path: filePath };
       } catch (error) {
         console.error('Image upload failed:', error);
         throw error;
