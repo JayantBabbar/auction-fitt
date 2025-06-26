@@ -35,7 +35,7 @@ export const useUserDeletion = () => {
       }
 
       // Type assertion and validation for the response
-      const response = data as AdminDeleteUserResponse;
+      const response = data as unknown as AdminDeleteUserResponse;
       
       // Check the response from the function
       if (response && !response.success) {
