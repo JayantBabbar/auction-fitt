@@ -3,6 +3,12 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+interface AdminDeleteUserResponse {
+  success: boolean;
+  error?: string;
+  message?: string;
+}
+
 export const useUserDeletion = () => {
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -28,12 +34,15 @@ export const useUserDeletion = () => {
         return false;
       }
 
+      // Type assertion and validation for the response
+      const response = data as AdminDeleteUserResponse;
+      
       // Check the response from the function
-      if (data && !data.success) {
-        console.error('Admin delete function returned error:', data.error);
+      if (response && !response.success) {
+        console.error('Admin delete function returned error:', response.error);
         toast({
           title: "Error Deleting User",
-          description: `Failed to delete user: ${data.error}`,
+          description: `Failed to delete user: ${response.error}`,
           variant: "destructive",
         });
         return false;
