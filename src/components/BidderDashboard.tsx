@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useAuctions } from '@/hooks/useAuctions';
 import { useUserBids, useCanUserBid, usePlaceBid } from '@/hooks/useBids';
 import { useToast } from '@/hooks/use-toast';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import BidderHeader from './bidder/BidderHeader';
 import BidderStats from './bidder/BidderStats';
 import AuctionCard from './bidder/AuctionCard';
@@ -16,27 +16,39 @@ const BidderDashboard = () => {
   const { data: canBid = true } = useCanUserBid();
   const placeBidMutation = usePlaceBid();
   
+  // IST timezone
+  const IST_TIMEZONE = 'Asia/Kolkata';
+  
   // Helper function to check if auction should be active
   const shouldAuctionBeActive = (auction: any) => {
-    const now = new Date();
+    const nowUTC = new Date();
+    const nowIST = toZonedTime(nowUTC, IST_TIMEZONE);
+    
     const startTime = auction.start_time ? new Date(auction.start_time) : null;
     const endTime = auction.end_time ? new Date(auction.end_time) : null;
     
-    console.log(`Auction ${auction.id} (${auction.title}):`, {
+    // Convert auction times to IST for comparison
+    const startTimeIST = startTime ? toZonedTime(startTime, IST_TIMEZONE) : null;
+    const endTimeIST = endTime ? toZonedTime(endTime, IST_TIMEZONE) : null;
+    
+    console.log(`Auction ${auction.id} (${auction.title}) - IST Analysis:`, {
       status: auction.status,
-      startTime: startTime?.toISOString(),
-      endTime: endTime?.toISOString(),
-      now: now.toISOString(),
-      hasStarted: startTime ? startTime <= now : true,
-      hasEnded: endTime ? endTime <= now : false
+      startTime_UTC: startTime?.toISOString(),
+      endTime_UTC: endTime?.toISOString(),
+      startTime_IST: startTimeIST?.toISOString(),
+      endTime_IST: endTimeIST?.toISOString(),
+      now_UTC: nowUTC.toISOString(),
+      now_IST: nowIST.toISOString(),
+      hasStarted: startTimeIST ? startTimeIST <= nowIST : true,
+      hasEnded: endTimeIST ? endTimeIST <= nowIST : false
     });
     
-    // If no start time, consider it started
-    if (!startTime) return auction.status === 'active';
+    // If no start time, consider it started if status allows
+    if (!startTimeIST) return auction.status === 'active';
     
-    // If has start time, check if it's passed and auction hasn't ended
-    const hasStarted = startTime <= now;
-    const hasEnded = endTime ? endTime <= now : false;
+    // Check if auction has started and hasn't ended (using IST times)
+    const hasStarted = startTimeIST <= nowIST;
+    const hasEnded = endTimeIST ? endTimeIST <= nowIST : false;
     
     return hasStarted && !hasEnded && auction.status !== 'cancelled';
   };

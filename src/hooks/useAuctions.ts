@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toZonedTime } from 'date-fns-tz';
 
 // Mock auction type
 type Auction = {
@@ -48,23 +49,33 @@ export const useAuctions = () => {
         throw error;
       }
 
-      // Add detailed logging for auction timing analysis
-      const now = new Date();
-      console.log('Current time:', now.toISOString());
+      // Add detailed logging for auction timing analysis with IST
+      const IST_TIMEZONE = 'Asia/Kolkata';
+      const nowUTC = new Date();
+      const nowIST = toZonedTime(nowUTC, IST_TIMEZONE);
+      
+      console.log('Current time UTC:', nowUTC.toISOString());
+      console.log('Current time IST:', nowIST.toISOString());
       
       data?.forEach(auction => {
         const startTime = auction.start_time ? new Date(auction.start_time) : null;
         const endTime = auction.end_time ? new Date(auction.end_time) : null;
+        const startTimeIST = startTime ? toZonedTime(startTime, IST_TIMEZONE) : null;
+        const endTimeIST = endTime ? toZonedTime(endTime, IST_TIMEZONE) : null;
         
         console.log(`Auction Analysis - ${auction.title} (${auction.id}):`, {
           status: auction.status,
-          start_time: auction.start_time,
-          end_time: auction.end_time,
-          startTime_parsed: startTime?.toISOString(),
-          endTime_parsed: endTime?.toISOString(),
-          hasStarted: startTime ? startTime <= now : 'no start time',
-          hasEnded: endTime ? endTime <= now : 'no end time',
-          shouldBeActive: startTime && startTime <= now && (!endTime || endTime > now) && auction.status !== 'cancelled'
+          start_time_UTC: auction.start_time,
+          end_time_UTC: auction.end_time,
+          startTime_parsed_UTC: startTime?.toISOString(),
+          endTime_parsed_UTC: endTime?.toISOString(),
+          startTime_parsed_IST: startTimeIST?.toISOString(),
+          endTime_parsed_IST: endTimeIST?.toISOString(),
+          hasStarted_UTC: startTime ? startTime <= nowUTC : 'no start time',
+          hasEnded_UTC: endTime ? endTime <= nowUTC : 'no end time',
+          hasStarted_IST: startTimeIST ? startTimeIST <= nowIST : 'no start time',
+          hasEnded_IST: endTimeIST ? endTimeIST <= nowIST : 'no end time',
+          shouldBeActive_IST: startTimeIST && startTimeIST <= nowIST && (!endTimeIST || endTimeIST > nowIST) && auction.status !== 'cancelled'
         });
       });
 
