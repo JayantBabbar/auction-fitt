@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Clock, DollarSign, Users, Gavel, Image as ImageIcon } from 'lucide-react';
 import { useUserBids } from '@/hooks/useBids';
 import BidActions from './BidActions';
+import AuctionImage from './AuctionImage';
+import AuctionStats from './AuctionStats';
+import AuctionStatusBadges from './AuctionStatusBadges';
+import BiddingSection from './BiddingSection';
 
 interface AuctionCardProps {
   auction: any;
@@ -81,63 +81,24 @@ const AuctionCard = ({
             <CardTitle className="text-xl mb-2">{auction.title}</CardTitle>
             <p className="text-sm text-slate-600 mb-3">{auction.description}</p>
             
-            {/* Auction Stats */}
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div className="flex items-center gap-1 text-slate-500">
-                <DollarSign className="h-3 w-3" />
-                <span>Current: ₹{auction.current_bid?.toLocaleString() || '0'}</span>
-              </div>
-              <div className="flex items-center gap-1 text-slate-500">
-                <Users className="h-3 w-3" />
-                <span>{auction.bidder_count} bidders</span>
-              </div>
-              <div className="flex items-center gap-1 text-slate-500">
-                <Clock className="h-3 w-3" />
-                <span className={auctionEnded ? 'text-red-600 font-semibold' : ''}>
-                  {timeRemaining}
-                </span>
-              </div>
-            </div>
+            <AuctionStats
+              currentBid={auction.current_bid}
+              bidderCount={auction.bidder_count}
+              timeRemaining={timeRemaining}
+              auctionEnded={auctionEnded}
+            />
           </div>
           
-          {/* Auction Image */}
-          <div className="flex-shrink-0">
-            {primaryImage ? (
-              <div className="w-24 h-24 rounded-lg overflow-hidden border border-slate-200">
-                <img
-                  src={primaryImage}
-                  alt={auction.title}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200&h=200&fit=crop';
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="w-24 h-24 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center">
-                <ImageIcon className="h-8 w-8 text-slate-400" />
-              </div>
-            )}
-          </div>
+          <AuctionImage
+            primaryImage={primaryImage}
+            title={auction.title}
+          />
           
-          {/* Status Badges */}
-          <div className="flex flex-col gap-2 items-end">
-            {auctionEnded && (
-              <Badge variant="destructive">
-                Ended
-              </Badge>
-            )}
-            {isLeading && !auctionEnded && (
-              <Badge className="bg-green-100 text-green-800">
-                Leading
-              </Badge>
-            )}
-            {myBid && !isLeading && !auctionEnded && (
-              <Badge variant="outline">
-                Your bid: ₹{myBid.toLocaleString()}
-              </Badge>
-            )}
-          </div>
+          <AuctionStatusBadges
+            auctionEnded={auctionEnded}
+            isLeading={isLeading}
+            myBid={myBid}
+          />
         </div>
       </CardHeader>
       
@@ -165,65 +126,18 @@ const AuctionCard = ({
           </div>
         )}
 
-        {/* Auction Ended Message */}
-        {auctionEnded && (
-          <div className="mb-4 p-3 bg-red-50 rounded-lg border border-red-200">
-            <p className="text-sm font-medium text-red-900">
-              🔒 This auction has ended. No more bids can be placed.
-            </p>
-          </div>
-        )}
-
-        {/* Bidding Section */}
-        {!auctionEnded && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Gavel className="h-4 w-4 text-slate-500" />
-              <span className="text-sm text-slate-600">
-                Minimum bid: ₹{minNextBid.toLocaleString()}
-              </span>
-            </div>
-            
-            <div className="flex gap-2">
-              <Input
-                type="number"
-                placeholder={`Min ₹${minNextBid.toLocaleString()}`}
-                value={bidAmount}
-                onChange={(e) => onBidChange(e.target.value)}
-                min={minNextBid}
-                step={auction.bid_increment}
-                className="flex-1"
-                disabled={!canPlaceBid}
-              />
-              <Button
-                variant="outline"
-                onClick={onQuickBid}
-                disabled={!canPlaceBid}
-              >
-                Quick Bid
-              </Button>
-            </div>
-            
-            <Button 
-              onClick={onPlaceBid}
-              disabled={
-                !canPlaceBid || 
-                !bidAmount || 
-                parseFloat(bidAmount) < minNextBid || 
-                isPlacingBid
-              }
-              className="w-full"
-            >
-              {isPlacingBid ? 'Placing Bid...' : `Place Bid ₹${bidAmount ? parseFloat(bidAmount).toLocaleString() : '0'}`}
-            </Button>
-            
-            {!canBid && !auctionEnded && (
-              <p className="text-xs text-amber-600 text-center">
-                You cannot bid for 24 hours after winning an auction
-              </p>
-            )}
-          </div>
-        )}
+        <BiddingSection
+          auctionEnded={auctionEnded}
+          minNextBid={minNextBid}
+          bidAmount={bidAmount}
+          onBidChange={onBidChange}
+          onQuickBid={onQuickBid}
+          onPlaceBid={onPlaceBid}
+          canPlaceBid={canPlaceBid}
+          canBid={canBid}
+          isPlacingBid={isPlacingBid}
+          bidIncrement={auction.bid_increment}
+        />
       </CardContent>
     </Card>
   );
