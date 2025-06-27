@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useAuctions } from '@/hooks/useAuctions';
 import { useUserBids, useCanUserBid, usePlaceBid } from '@/hooks/useBids';
 import { useToast } from '@/hooks/use-toast';
-import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 import BidderHeader from './bidder/BidderHeader';
 import BidderStats from './bidder/BidderStats';
 import AuctionCard from './bidder/AuctionCard';
@@ -19,52 +20,50 @@ const BidderDashboard = () => {
   // IST timezone
   const IST_TIMEZONE = 'Asia/Kolkata';
   
-  // Helper function to check if auction should be active
-  const shouldAuctionBeActive = (auction: any) => {
+  // Helper function to check if auction should be visible to bidders (active or ended)
+  const isAuctionVisibleToBidders = (auction: any) => {
     const nowUTC = new Date();
     const nowIST = toZonedTime(nowUTC, IST_TIMEZONE);
     
-    const startTime = auction.start_time ? new Date(auction.start_time) : null;
-    const endTime = auction.end_time ? new Date(auction.end_time) : null;
+    if (!auction.start_time) {
+      return auction.status === 'active';
+    }
     
-    // Convert auction times to IST for comparison
-    const startTimeIST = startTime ? toZonedTime(startTime, IST_TIMEZONE) : null;
-    const endTimeIST = endTime ? toZonedTime(endTime, IST_TIMEZONE) : null;
+    const startTime = new Date(auction.start_time);
+    const startTimeIST = toZonedTime(startTime, IST_TIMEZONE);
     
-    console.log(`Auction ${auction.id} (${auction.title}) - IST Analysis:`, {
+    // Show auction if:
+    // 1. It has started (start time passed in IST)
+    // 2. Status is active or ended
+    // 3. Not cancelled
+    const hasStarted = startTimeIST <= nowIST;
+    const isActiveOrEnded = auction.status === 'active' || auction.status === 'ended';
+    const isNotCancelled = auction.status !== 'cancelled';
+    
+    console.log(`Auction visibility check - ${auction.title}:`, {
+      hasStarted,
+      isActiveOrEnded,
+      isNotCancelled,
+      visible: hasStarted && isActiveOrEnded && isNotCancelled,
       status: auction.status,
-      startTime_UTC: startTime?.toISOString(),
-      endTime_UTC: endTime?.toISOString(),
-      startTime_IST: startTimeIST?.toISOString(),
-      endTime_IST: endTimeIST?.toISOString(),
-      now_UTC: nowUTC.toISOString(),
-      now_IST: nowIST.toISOString(),
-      hasStarted: startTimeIST ? startTimeIST <= nowIST : true,
-      hasEnded: endTimeIST ? endTimeIST <= nowIST : false
+      startTimeIST: startTimeIST.toISOString(),
+      nowIST: nowIST.toISOString()
     });
     
-    // If no start time, consider it started if status allows
-    if (!startTimeIST) return auction.status === 'active';
-    
-    // Check if auction has started and hasn't ended (using IST times)
-    const hasStarted = startTimeIST <= nowIST;
-    const hasEnded = endTimeIST ? endTimeIST <= nowIST : false;
-    
-    return hasStarted && !hasEnded && auction.status !== 'cancelled';
+    return hasStarted && isActiveOrEnded && isNotCancelled;
   };
 
-  // Filter to show only auctions that should be active and visible to bidders
-  const activeAuctions = auctions.filter(auction => {
-    console.log(`Filtering auction ${auction.id}:`, {
-      title: auction.title,
+  // Filter auctions that should be visible to bidders
+  const visibleAuctions = auctions.filter(auction => {
+    const isVisible = isAuctionVisibleToBidders(auction);
+    console.log(`Filtering auction ${auction.id} (${auction.title}):`, {
       status: auction.status,
-      shouldBeActive: shouldAuctionBeActive(auction)
+      visible: isVisible
     });
-    
-    return shouldAuctionBeActive(auction);
+    return isVisible;
   });
   
-  console.log('Active auctions for display:', activeAuctions.map(a => ({
+  console.log('Visible auctions for bidders:', visibleAuctions.map(a => ({
     id: a.id,
     title: a.title,
     status: a.status,
@@ -104,7 +103,7 @@ const BidderDashboard = () => {
   };
 
   const handleQuickBid = (auctionId: string) => {
-    const auction = activeAuctions.find(a => a.id === auctionId);
+    const auction = visibleAuctions.find(a => a.id === auctionId);
     if (!auction) return;
     
     const minNextBid = calculateMinNextBid(auction);
@@ -166,18 +165,18 @@ const BidderDashboard = () => {
         />
 
         <div className="space-y-6">
-          <h2 className="text-2xl font-serif font-semibold">Active Auctions</h2>
+          <h2 className="text-2xl font-serif font-semibold">Available Auctions</h2>
           
-          {activeAuctions.length === 0 ? (
+          {visibleAuctions.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg">No active auctions available at the moment.</p>
+              <p className="text-muted-foreground text-lg">No auctions available at the moment.</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Auctions will appear here once they start and are active.
+                Auctions will appear here once they start.
               </p>
             </div>
           ) : (
             <div className="grid gap-6">
-              {activeAuctions.map((auction) => {
+              {visibleAuctions.map((auction) => {
                 const userBid = getUserBidForAuction(auction.id);
                 const isLeading = userBid && auction.current_bid === userBid.amount;
                 

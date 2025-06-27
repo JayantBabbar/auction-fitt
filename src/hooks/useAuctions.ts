@@ -33,7 +33,44 @@ type AuctionUpdate = Partial<Auction>;
 // Use the secure version of create auction hook
 export { useSecureCreateAuction as useCreateAuction } from '@/hooks/useSecureAuctions';
 
+// IST timezone constant
+const IST_TIMEZONE = 'Asia/Kolkata';
+
+// Helper function to determine auction status based on IST time
+const determineAuctionStatus = (auction: any) => {
+  const nowUTC = new Date();
+  const nowIST = toZonedTime(nowUTC, IST_TIMEZONE);
+  
+  if (!auction.start_time || !auction.end_time) {
+    return auction.status; // Keep original status if times are not set
+  }
+  
+  const startTimeUTC = new Date(auction.start_time);
+  const endTimeUTC = new Date(auction.end_time);
+  const startTimeIST = toZonedTime(startTimeUTC, IST_TIMEZONE);
+  const endTimeIST = toZonedTime(endTimeUTC, IST_TIMEZONE);
+  
+  // Check if auction should be ended
+  if (endTimeIST <= nowIST) {
+    return 'ended';
+  }
+  
+  // Check if auction should be active
+  if (startTimeIST <= nowIST && endTimeIST > nowIST && auction.status !== 'cancelled') {
+    return 'active';
+  }
+  
+  // Check if auction should be upcoming
+  if (startTimeIST > nowIST && auction.status !== 'cancelled') {
+    return 'upcoming';
+  }
+  
+  return auction.status;
+};
+
 export const useAuctions = () => {
+  const queryClient = useQueryClient();
+  
   return useQuery({
     queryKey: ['auctions'],
     queryFn: async () => {
@@ -49,39 +86,83 @@ export const useAuctions = () => {
         throw error;
       }
 
-      // Add detailed logging for auction timing analysis with IST
-      const IST_TIMEZONE = 'Asia/Kolkata';
       const nowUTC = new Date();
       const nowIST = toZonedTime(nowUTC, IST_TIMEZONE);
       
       console.log('Current time UTC:', nowUTC.toISOString());
       console.log('Current time IST:', nowIST.toISOString());
       
-      data?.forEach(auction => {
+      // Process each auction to determine correct status and update if needed
+      const processedAuctions = await Promise.all((data || []).map(async (auction) => {
+        const expectedStatus = determineAuctionStatus(auction);
+        
+        // Log auction analysis
         const startTime = auction.start_time ? new Date(auction.start_time) : null;
         const endTime = auction.end_time ? new Date(auction.end_time) : null;
         const startTimeIST = startTime ? toZonedTime(startTime, IST_TIMEZONE) : null;
         const endTimeIST = endTime ? toZonedTime(endTime, IST_TIMEZONE) : null;
         
         console.log(`Auction Analysis - ${auction.title} (${auction.id}):`, {
-          status: auction.status,
+          currentStatus: auction.status,
+          expectedStatus,
           start_time_UTC: auction.start_time,
           end_time_UTC: auction.end_time,
-          startTime_parsed_UTC: startTime?.toISOString(),
-          endTime_parsed_UTC: endTime?.toISOString(),
-          startTime_parsed_IST: startTimeIST?.toISOString(),
-          endTime_parsed_IST: endTimeIST?.toISOString(),
-          hasStarted_UTC: startTime ? startTime <= nowUTC : 'no start time',
-          hasEnded_UTC: endTime ? endTime <= nowUTC : 'no end time',
-          hasStarted_IST: startTimeIST ? startTimeIST <= nowIST : 'no start time',
-          hasEnded_IST: endTimeIST ? endTimeIST <= nowIST : 'no end time',
-          shouldBeActive_IST: startTimeIST && startTimeIST <= nowIST && (!endTimeIST || endTimeIST > nowIST) && auction.status !== 'cancelled'
+          startTime_IST: startTimeIST?.toISOString(),
+          endTime_IST: endTimeIST?.toISOString(),
+          now_IST: nowIST.toISOString(),
+          hasStarted: startTimeIST ? startTimeIST <= nowIST : false,
+          hasEnded: endTimeIST ? endTimeIST <= nowIST : false,
+          shouldUpdate: auction.status !== expectedStatus
         });
-      });
+        
+        // Update auction status if it has changed based on time
+        if (auction.status !== expectedStatus && expectedStatus !== auction.status) {
+          try {
+            console.log(`Updating auction ${auction.id} status from ${auction.status} to ${expectedStatus}`);
+            
+            const { data: updatedAuction, error: updateError } = await supabase
+              .from('auctions')
+              .update({ status: expectedStatus, updated_at: new Date().toISOString() })
+              .eq('id', auction.id)
+              .select()
+              .single();
+            
+            if (updateError) {
+              console.error('Error updating auction status:', updateError);
+              return auction; // Return original if update fails
+            }
+            
+            return updatedAuction;
+          } catch (updateError) {
+            console.error('Error updating auction status:', updateError);
+            return auction; // Return original if update fails
+          }
+        }
+        
+        return auction;
+      }));
 
-      console.log('Auctions fetched from Supabase:', data);
-      return data || [];
+      console.log('Processed auctions with updated statuses:', processedAuctions.map(a => ({
+        id: a.id,
+        title: a.title,
+        status: a.status,
+        start_time: a.start_time,
+        end_time: a.end_time
+      })));
+      
+      // Invalidate the query after a short delay to reflect any status updates
+      if (processedAuctions.some(auction => {
+        const expectedStatus = determineAuctionStatus(auction);
+        return auction.status !== expectedStatus;
+      })) {
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['auctions'] });
+        }, 1000);
+      }
+      
+      return processedAuctions;
     },
+    refetchInterval: 60000, // Refetch every minute to check for status changes
   });
 };
 
