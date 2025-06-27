@@ -63,6 +63,7 @@ const AuctionCard = ({
   const minNextBid = calculateMinNextBid();
   const timeRemaining = formatTimeRemaining(auction.end_time);
   const auctionEnded = isAuctionEnded();
+  const isActive = auction.status === 'active' && !auctionEnded;
   
   // Get user's bid for this auction
   const userBidForAuction = userBids.find(bid => bid.auction_id === auction.id);
@@ -73,6 +74,9 @@ const AuctionCard = ({
   // Get the primary image or first available image
   const primaryImage = auction.image_urls && auction.image_urls.length > 0 ? auction.image_urls[0] : null;
 
+  // Get bid count from auction or calculate from bidder_count
+  const bidCount = auction.bid_count || auction.bidder_count || 0;
+
   return (
     <Card className="border-slate-200/60 shadow-sm bg-white/70 backdrop-blur-sm">
       <CardHeader className="pb-4">
@@ -82,8 +86,10 @@ const AuctionCard = ({
             <p className="text-sm text-slate-600 mb-3">{auction.description}</p>
             
             <AuctionStats
-              currentBid={auction.current_bid}
-              bidderCount={auction.bidder_count}
+              startingBid={auction.starting_bid}
+              currentBid={auction.current_bid || auction.starting_bid}
+              bidIncrement={auction.bid_increment}
+              bidCount={bidCount}
               timeRemaining={timeRemaining}
               auctionEnded={auctionEnded}
             />
@@ -96,6 +102,7 @@ const AuctionCard = ({
           
           <AuctionStatusBadges
             auctionEnded={auctionEnded}
+            isActive={isActive}
             isLeading={isLeading}
             myBid={myBid}
           />
