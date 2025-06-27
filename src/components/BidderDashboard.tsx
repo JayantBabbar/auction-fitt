@@ -161,7 +161,7 @@ const BidderDashboard = () => {
         <BidderStats 
           activeBids={activeBidsCount}
           leadingBids={leadingBidsCount}
-          wonAuctions={3}
+          wonAuctions={0}
         />
 
         <div className="space-y-6">
