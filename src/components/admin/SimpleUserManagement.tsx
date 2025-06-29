@@ -22,8 +22,8 @@ const SimpleUserManagement = () => {
   const [emailError, setEmailError] = useState('');
 
   const validateEmail = (email: string) => {
-    if (!email.endsWith('@fitt-iitd.in')) {
-      setEmailError('Only @fitt-iitd.in email addresses are allowed');
+    if (!email.endsWith('@fitt-iitd.in') && !email.endsWith('@aic-iitd.in')) {
+      setEmailError('Only @fitt-iitd.in and @aic-iitd.in email addresses are allowed');
       return false;
     }
     setEmailError('');
@@ -103,7 +103,7 @@ const SimpleUserManagement = () => {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Email Restriction:</strong> Only email addresses ending with @fitt-iitd.in are allowed for user creation.
+              <strong>Email Restriction:</strong> Only email addresses ending with @fitt-iitd.in or @aic-iitd.in are allowed for user creation.
             </AlertDescription>
           </Alert>
 
@@ -142,7 +142,7 @@ const SimpleUserManagement = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleEmailChange(e.target.value)}
-                  placeholder="john@fitt-iitd.in"
+                  placeholder="john@fitt-iitd.in or john@aic-iitd.in"
                   required
                   className={emailError ? 'border-red-500' : ''}
                 />
@@ -150,7 +150,7 @@ const SimpleUserManagement = () => {
                   <p className="text-sm text-red-500 mt-1">{emailError}</p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
-                  Must end with @fitt-iitd.in
+                  Must end with @fitt-iitd.in or @aic-iitd.in
                 </p>
               </div>
             </div>

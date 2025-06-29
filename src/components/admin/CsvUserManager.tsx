@@ -34,7 +34,7 @@ const CsvUserManager: React.FC<CsvUserManagerProps> = ({
   const [defaultPassword, setDefaultPassword] = useState('TempPassword123!');
 
   const validateEmailDomain = (email: string): boolean => {
-    return email.toLowerCase().endsWith('@fitt-iitd.in');
+    return email.toLowerCase().endsWith('@fitt-iitd.in') || email.toLowerCase().endsWith('@aic-iitd.in');
   };
 
   const parseCsvText = () => {
@@ -63,7 +63,7 @@ const CsvUserManager: React.FC<CsvUserManagerProps> = ({
     if (invalidEmails.length > 0) {
       toast({
         title: "Invalid Email Addresses",
-        description: `The following emails don't end with @fitt-iitd.in:\n${invalidEmails.join('\n')}`,
+        description: `The following emails don't end with @fitt-iitd.in or @aic-iitd.in:\n${invalidEmails.join('\n')}`,
         variant: "destructive",
         duration: 8000,
       });
@@ -80,7 +80,7 @@ const CsvUserManager: React.FC<CsvUserManagerProps> = ({
   };
 
   const downloadTemplate = () => {
-    const csvContent = "name,email,password,role\nJohn Doe,john@fitt-iitd.in,Password123!,bidder\nJane Admin,jane@fitt-iitd.in,AdminPass456!,admin";
+    const csvContent = "name,email,password,role\nJohn Doe,john@fitt-iitd.in,Password123!,bidder\nJane Admin,jane@aic-iitd.in,AdminPass456!,admin";
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -94,7 +94,7 @@ const CsvUserManager: React.FC<CsvUserManagerProps> = ({
     const existingUsersCsv = `Admin User,admin@fitt-iitd.in,admin123,admin
 Abhishek,abhishek@fitt-iitd.in,J5b|>)Vdn\\cj,bidder
 Test Bidder 1,bidder1@fitt-iitd.in,password123,bidder
-Test Bidder 2,bidder2@fitt-iitd.in,password123,bidder`;
+Test Bidder 2,bidder2@aic-iitd.in,password123,bidder`;
     
     setCsvText(existingUsersCsv);
     toast({
@@ -108,7 +108,7 @@ Test Bidder 2,bidder2@fitt-iitd.in,password123,bidder`;
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          <strong>Email Restriction:</strong> Only email addresses ending with @fitt-iitd.in will be accepted. Invalid emails will be automatically filtered out.
+          <strong>Email Restriction:</strong> Only email addresses ending with @fitt-iitd.in or @aic-iitd.in will be accepted. Invalid emails will be automatically filtered out.
         </AlertDescription>
       </Alert>
 
@@ -153,11 +153,11 @@ Test Bidder 2,bidder2@fitt-iitd.in,password123,bidder`;
           id="csv-data"
           value={csvText}
           onChange={(e) => setCsvText(e.target.value)}
-          placeholder="name,email,password,role&#10;John Doe,john@fitt-iitd.in,Password123!,bidder&#10;Jane Admin,jane@fitt-iitd.in,AdminPass456!,admin"
+          placeholder="name,email,password,role&#10;John Doe,john@fitt-iitd.in,Password123!,bidder&#10;Jane Admin,jane@aic-iitd.in,AdminPass456!,admin"
           rows={8}
         />
         <p className="text-sm text-muted-foreground mt-1">
-          Format: name,email,password,role (one user per line). Email must end with @fitt-iitd.in
+          Format: name,email,password,role (one user per line). Email must end with @fitt-iitd.in or @aic-iitd.in
         </p>
       </div>
 

@@ -22,7 +22,7 @@ export const useUserManagement = () => {
   const [isCreating, setIsCreating] = useState(false);
 
   const validateEmailDomain = (email: string): boolean => {
-    return email.toLowerCase().endsWith('@fitt-iitd.in');
+    return email.toLowerCase().endsWith('@fitt-iitd.in') || email.toLowerCase().endsWith('@aic-iitd.in');
   };
 
   const createUser = async (userData: CreateUserData): Promise<boolean> => {
@@ -30,7 +30,7 @@ export const useUserManagement = () => {
     if (!validateEmailDomain(userData.email)) {
       toast({
         title: "Invalid Email Domain",
-        description: "Only @fitt-iitd.in email addresses are allowed",
+        description: "Only @fitt-iitd.in and @aic-iitd.in email addresses are allowed",
         variant: "destructive",
       });
       return false;
@@ -103,7 +103,7 @@ export const useUserManagement = () => {
     if (validUsers.length === 0) {
       toast({
         title: "No Valid Users",
-        description: "All users have invalid email domains. Only @fitt-iitd.in emails are allowed.",
+        description: "All users have invalid email domains. Only @fitt-iitd.in and @aic-iitd.in emails are allowed.",
         variant: "destructive",
       });
       return 0;
