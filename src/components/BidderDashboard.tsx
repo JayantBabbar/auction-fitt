@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useAuctions } from '@/hooks/useAuctions';
@@ -77,7 +76,7 @@ const BidderDashboard = () => {
     return (auction.current_bid || auction.starting_bid) + auction.bid_increment;
   };
 
-  const handleBid = async (auctionId: string) => {
+  const handleQuickBid = async (auctionId: string) => {
     if (!canBid) {
       toast({
         title: "Bidding Restricted",
@@ -87,30 +86,19 @@ const BidderDashboard = () => {
       return;
     }
 
-    const bidAmount = parseFloat(bidAmounts[auctionId] || '0');
-
-    try {
-      await placeBidMutation.mutateAsync({
-        auctionId,
-        amount: bidAmount
-      });
-      
-      // Clear the bid amount input
-      setBidAmounts(prev => ({ ...prev, [auctionId]: '' }));
-    } catch (error) {
-      console.error('Bid placement error:', error);
-    }
-  };
-
-  const handleQuickBid = (auctionId: string) => {
     const auction = visibleAuctions.find(a => a.id === auctionId);
     if (!auction) return;
     
     const minNextBid = calculateMinNextBid(auction);
-    setBidAmounts(prev => ({
-      ...prev,
-      [auctionId]: minNextBid.toString()
-    }));
+
+    try {
+      await placeBidMutation.mutateAsync({
+        auctionId,
+        amount: minNextBid
+      });
+    } catch (error) {
+      console.error('Bid placement error:', error);
+    }
   };
 
   // Calculate stats from real data
@@ -186,7 +174,7 @@ const BidderDashboard = () => {
                     auction={auction}
                     bidAmount={bidAmounts[auction.id] || ''}
                     onBidChange={(value) => setBidAmounts(prev => ({ ...prev, [auction.id]: value }))}
-                    onPlaceBid={() => handleBid(auction.id)}
+                    onPlaceBid={() => {}} // No longer used since we only have quick bid
                     onQuickBid={() => handleQuickBid(auction.id)}
                     isLeading={isLeading}
                     myBid={userBid?.amount}
