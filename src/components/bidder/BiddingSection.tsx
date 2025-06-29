@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Gavel, Lock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Gavel } from 'lucide-react';
 
 interface BiddingSectionProps {
   auctionEnded: boolean;
@@ -19,7 +20,10 @@ interface BiddingSectionProps {
 const BiddingSection = ({
   auctionEnded,
   minNextBid,
+  bidAmount,
+  onBidChange,
   onQuickBid,
+  onPlaceBid,
   canPlaceBid,
   canBid,
   isPlacingBid,
@@ -40,27 +44,42 @@ const BiddingSection = ({
       <div className="flex items-center gap-2">
         <Gavel className="h-4 w-4 text-slate-500" />
         <span className="text-sm text-slate-600">
-          Next bid: ₹{minNextBid.toLocaleString()}
+          Minimum bid: ₹{minNextBid.toLocaleString()}
         </span>
       </div>
       
-      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <div className="flex items-center gap-2 mb-2">
-          <Lock className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium text-blue-900">Quick Bid Only</span>
-        </div>
-        <p className="text-xs text-blue-600 mb-3">
-          Bidding is locked to increment amounts only (₹{bidIncrement.toLocaleString()} increments)
-        </p>
-        
+      <div className="flex gap-2">
+        <Input
+          type="number"
+          placeholder={`Min ₹${minNextBid.toLocaleString()}`}
+          value={bidAmount}
+          onChange={(e) => onBidChange(e.target.value)}
+          min={minNextBid}
+          step={bidIncrement}
+          className="flex-1"
+          disabled={!canPlaceBid}
+        />
         <Button
+          variant="outline"
           onClick={onQuickBid}
-          disabled={!canPlaceBid || isPlacingBid}
-          className="w-full"
+          disabled={!canPlaceBid}
         >
-          {isPlacingBid ? 'Placing Bid...' : `Place Bid ₹${minNextBid.toLocaleString()}`}
+          Quick Bid
         </Button>
       </div>
+      
+      <Button 
+        onClick={onPlaceBid}
+        disabled={
+          !canPlaceBid || 
+          !bidAmount || 
+          parseFloat(bidAmount) < minNextBid || 
+          isPlacingBid
+        }
+        className="w-full"
+      >
+        {isPlacingBid ? 'Placing Bid...' : `Place Bid ₹${bidAmount ? parseFloat(bidAmount).toLocaleString() : '0'}`}
+      </Button>
       
       {!canBid && !auctionEnded && (
         <p className="text-xs text-amber-600 text-center">
